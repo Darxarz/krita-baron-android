@@ -13,7 +13,8 @@
 - Isolated website: 54 tests passed across integration, native preparation, proxy
   guards and authentication security; production site was not changed.
 - Ruff checks/format and Pyright passed for the new Python compiler/tools/tests.
-- All 429 vendored engine files match the reviewed SHA-256 snapshot.
+- All 428 vendored engine files match the reviewed SHA-256 snapshot. The original
+  websockets submodule's `.git` pointer is excluded from the portable snapshot.
 - Android Keystore helper compiled against the Android SDK.
 - APK signature verifies using v2; package `org.krita.baron.debug`, Android API 24+,
   target SDK 35. APK includes the current native gallery/client and Keystore DEX

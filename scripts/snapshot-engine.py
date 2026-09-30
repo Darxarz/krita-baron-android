@@ -13,7 +13,7 @@ if target.exists():
 manifest = {}
 for folder in ("ai_diffusion", "tests/mock"):
     for path in (source / folder).rglob("*"):
-        if not path.is_file() or "__pycache__" in path.parts:
+        if not path.is_file() or "__pycache__" in path.parts or ".git" in path.parts:
             continue
         rel = path.relative_to(source)
         if path.suffix not in (".py", ".json") and "websockets" not in path.parts:

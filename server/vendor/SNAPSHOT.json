@@ -103,7 +103,6 @@
     "ai_diffusion/ui/upscale.py": "f2250021f1f20c1a352fcd261d4544e3669c9330fd1cb5ac06132a8e8444aa3d",
     "ai_diffusion/ui/widget.py": "3ce42c79bd7ee02196633f316053a53fb3c5127c59d04b511a45407ab87e6c6a",
     "ai_diffusion/ui/__init__.py": "4721e6bd2f4cd9b93a3807a7357af6ca2be9dcff97c0cb845966be631ea903a3",
-    "ai_diffusion/websockets/.git": "5a63ea15e841f087107573a3dcca2a1df4fb99a3000961666bdaf67bb60932af",
     "ai_diffusion/websockets/.gitignore": "620d8a6266ad91cce5c481b2d00187b11bcf62beb5a8f859a80be8992d160383",
     "ai_diffusion/websockets/.readthedocs.yml": "648dbcb174847ea9cdf7fc231387f77a4431a310d77a430bf1fc7a013bdc0ebd",
     "ai_diffusion/websockets/CODE_OF_CONDUCT.md": "11c17d8d5b3ed4ea7c12eafd0fba21d5fb8032a3d10f82c0c8c6c49319092fd2",
