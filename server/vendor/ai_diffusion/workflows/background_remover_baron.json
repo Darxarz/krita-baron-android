@@ -1,0 +1,195 @@
+{
+  "0": {
+    "class_type": "ETN_KritaCanvas",
+    "inputs": {},
+    "_meta": {
+      "title": "Krita Canvas"
+    }
+  },
+  "1": {
+    "class_type": "UltralyticsDetectorProvider",
+    "inputs": {
+      "model_name": "segm/person_yolov8m-seg.pt"
+    }
+  },
+  "2": {
+    "class_type": "ETN_Parameter",
+    "inputs": {
+      "name": "clean edge colors",
+      "type": "toggle",
+      "default": true
+    },
+    "_meta": {
+      "title": "Clean edge colors"
+    }
+  },
+  "3": {
+    "class_type": "ETN_Parameter",
+    "inputs": {
+      "name": "detection threshold",
+      "type": "number",
+      "default": 0.3,
+      "min": 0.05,
+      "max": 0.95
+    },
+    "_meta": {
+      "title": "Detection threshold"
+    }
+  },
+  "4": {
+    "class_type": "ETN_Parameter",
+    "inputs": {
+      "name": "hair detail margin",
+      "type": "number (integer)",
+      "default": 8,
+      "min": 0,
+      "max": 32
+    },
+    "_meta": {
+      "title": "Hair detail margin"
+    }
+  },
+  "5": {
+    "class_type": "BiRefNetRMBG",
+    "inputs": {
+      "image": [
+        "0",
+        0
+      ],
+      "model": "BiRefNet-HR-matting",
+      "mask_blur": 0,
+      "mask_offset": 0,
+      "invert_output": false,
+      "refine_foreground": [
+        "2",
+        0
+      ],
+      "background": "Alpha",
+      "background_color": "#222222"
+    }
+  },
+  "6": {
+    "class_type": "SplitImageWithAlpha",
+    "inputs": {
+      "image": [
+        "5",
+        0
+      ]
+    }
+  },
+  "7": {
+    "class_type": "SegmDetectorSEGS",
+    "inputs": {
+      "segm_detector": [
+        "1",
+        1
+      ],
+      "image": [
+        "0",
+        0
+      ],
+      "threshold": [
+        "3",
+        0
+      ],
+      "dilation": 0,
+      "crop_factor": 1.0,
+      "drop_size": 1,
+      "labels": "person"
+    }
+  },
+  "8": {
+    "class_type": "SegsToCombinedMask",
+    "inputs": {
+      "segs": [
+        "7",
+        0
+      ]
+    }
+  },
+  "9": {
+    "class_type": "GrowMask",
+    "inputs": {
+      "mask": [
+        "8",
+        0
+      ],
+      "expand": [
+        "4",
+        0
+      ],
+      "tapered_corners": true
+    }
+  },
+  "10": {
+    "class_type": "MaskComposite",
+    "inputs": {
+      "destination": [
+        "5",
+        1
+      ],
+      "source": [
+        "9",
+        0
+      ],
+      "x": 0,
+      "y": 0,
+      "operation": "multiply"
+    }
+  },
+  "11": {
+    "class_type": "MaskComposite",
+    "inputs": {
+      "destination": [
+        "10",
+        0
+      ],
+      "source": [
+        "0",
+        4
+      ],
+      "x": 0,
+      "y": 0,
+      "operation": "multiply"
+    }
+  },
+  "12": {
+    "class_type": "ETN_ApplyMaskToImage",
+    "inputs": {
+      "image": [
+        "6",
+        0
+      ],
+      "mask": [
+        "11",
+        0
+      ]
+    }
+  },
+  "13": {
+    "class_type": "ImageAddNoise",
+    "inputs": {
+      "image": [
+        "12",
+        0
+      ],
+      "seed": [
+        "0",
+        3
+      ],
+      "strength": 0.0
+    }
+  },
+  "14": {
+    "class_type": "ETN_KritaOutput",
+    "inputs": {
+      "images": [
+        "13",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Baron: Character without chair"
+    }
+  }
+}

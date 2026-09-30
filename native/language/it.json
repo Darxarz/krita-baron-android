@@ -1,0 +1,28 @@
+{
+  "id": "it",
+  "name": "Italiano",
+  "translations": {
+    "%1 · %2 bleatbucks": "Connesso · %1 · Saldo: %2 bleatbucks",
+    "Character mask — editable": "Maschera del personaggio — modificabile",
+    "Connection": "Connessione",
+    "Connection denied or code expired. Start sign-in again.": "Connessione negata o codice scaduto. Riavvia l’accesso.",
+    "Edit": "Modifica",
+    "Enter the website address: https://orchestrion.su": "Inserisci l’indirizzo del sito: https://orchestrion.su",
+    "Generate": "Genera",
+    "Identity": "Identità",
+    "Internet connections require HTTPS": "Le connessioni Internet richiedono HTTPS",
+    "Model": "Modello",
+    "Models": "Modelli",
+    "Not connected": "NON Connesso",
+    "Prompt": "Richiesta",
+    "Scale": "Scala",
+    "Seed": "Seme",
+    "Separate background": "Separa sfondo",
+    "Sign out": "Chiudi sessione",
+    "Sign-in timed out. Start again.": "Tempo di accesso scaduto. Ricomincia.",
+    "Strength": "Intensità",
+    "Style": "Stile",
+    "Upscale": "Aumenta Scala",
+    "≈ %1 bleatbucks": "≈ %1 bleatbucks"
+  }
+}

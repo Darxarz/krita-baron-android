@@ -1,0 +1,282 @@
+{
+  "en": {
+    "name": "English",
+    "translations": {
+      "Code from Krita": "Code from Krita",
+      "Checking website login…": "Checking website login…",
+      "Allow website storage and try again.": "Allow website storage and try again.",
+      "Approved. Return to Krita to finish connecting.": "Approved. Return to Krita to finish connecting.",
+      "Connection denied.": "Connection denied.",
+      "Device access expires after 30 days. Revoke it in your website key manager.": "Device access expires after 30 days. Revoke it in your website key manager.",
+      "Sign in on website": "Sign in on website",
+      "Connect": "Connect",
+      "Cancel sign-in": "Cancel sign-in",
+      "Sign in on the opened website, enter this code and approve the connection:": "Sign in on the opened website, enter this code and approve the connection:",
+      "Your workshop: browser login, balance, prices and model catalog.": "Your workshop: browser login, balance, prices and model catalog.",
+      "Connect to Orchestrion": "Connect to Orchestrion",
+      "Connected · {name}\nBalance: {amount} bleatbucks": "Connected · {name}\nBalance: {amount} bleatbucks",
+      "Sign in on the website through your browser. Krita does not store your password.": "Sign in on the website through your browser. Krita does not store your password.",
+      "Connection denied or code expired. Start sign-in again.": "Connection denied or code expired. Start sign-in again."
+    }
+  },
+  "es-ca": {
+    "name": "Català (Valencià)",
+    "translations": {
+      "Code from Krita": "Codi de Krita",
+      "Checking website login…": "Comprovant l’inici de sessió…",
+      "Allow website storage and try again.": "Permet l’emmagatzematge del lloc web i torna-ho a provar.",
+      "Approved. Return to Krita to finish connecting.": "Autoritzat. Torna a Krita per acabar la connexió.",
+      "Connection denied.": "Connexió denegada.",
+      "Device access expires after 30 days. Revoke it in your website key manager.": "L’accés caduca en 30 dies. Revoca’l al gestor de claus del lloc web.",
+      "Sign in on website": "Iniciar sessió al lloc web",
+      "Connect": "Connectar",
+      "Cancel sign-in": "Cancel·lar l’inici de sessió",
+      "Sign in on the opened website, enter this code and approve the connection:": "Inicia sessió al lloc web obert, introdueix aquest codi i autoritza la connexió:",
+      "Your workshop: browser login, balance, prices and model catalog.": "El teu taller: inici de sessió al navegador, saldo, preus i catàleg de models.",
+      "Connect to Orchestrion": "Connectar a Orchestrion",
+      "Connected · {name}\nBalance: {amount} bleatbucks": "Connectat · {name}\nSaldo: {amount} bleatbucks",
+      "Sign in on the website through your browser. Krita does not store your password.": "Inicia sessió al lloc web des del navegador. Krita no desa la contrasenya.",
+      "Connection denied or code expired. Start sign-in again.": "Connexió denegada o codi caducat. Torna a iniciar sessió."
+    }
+  },
+  "es": {
+    "name": "Español",
+    "translations": {
+      "Code from Krita": "Código de Krita",
+      "Checking website login…": "Comprobando el inicio de sesión…",
+      "Allow website storage and try again.": "Permite el almacenamiento del sitio e inténtalo de nuevo.",
+      "Approved. Return to Krita to finish connecting.": "Autorizado. Vuelve a Krita para terminar la conexión.",
+      "Connection denied.": "Conexión denegada.",
+      "Device access expires after 30 days. Revoke it in your website key manager.": "El acceso caduca en 30 días. Revócalo en el gestor de claves del sitio.",
+      "Sign in on website": "Iniciar sesión en el sitio",
+      "Connect": "Conectar",
+      "Cancel sign-in": "Cancelar inicio de sesión",
+      "Sign in on the opened website, enter this code and approve the connection:": "Inicia sesión en el sitio abierto, introduce este código y autoriza la conexión:",
+      "Your workshop: browser login, balance, prices and model catalog.": "Tu taller: inicio de sesión en el navegador, saldo, precios y catálogo de modelos.",
+      "Connect to Orchestrion": "Conectar a Orchestrion",
+      "Connected · {name}\nBalance: {amount} bleatbucks": "Conectado · {name}\nSaldo: {amount} bleatbucks",
+      "Sign in on the website through your browser. Krita does not store your password.": "Inicia sesión en el sitio desde el navegador. Krita no guarda tu contraseña.",
+      "Connection denied or code expired. Start sign-in again.": "Conexión denegada o código caducado. Vuelve a iniciar sesión."
+    }
+  },
+  "fr": {
+    "name": "Français",
+    "translations": {
+      "Code from Krita": "Code de Krita",
+      "Checking website login…": "Vérification de la connexion au site…",
+      "Allow website storage and try again.": "Autorisez le stockage du site et réessayez.",
+      "Approved. Return to Krita to finish connecting.": "Autorisé. Revenez dans Krita pour terminer la connexion.",
+      "Connection denied.": "Connexion refusée.",
+      "Device access expires after 30 days. Revoke it in your website key manager.": "L’accès expire après 30 jours. Révoquez-le dans le gestionnaire de clés du site.",
+      "Sign in on website": "Se connecter au site",
+      "Connect": "Connexion",
+      "Cancel sign-in": "Annuler la connexion",
+      "Sign in on the opened website, enter this code and approve the connection:": "Connectez-vous sur le site ouvert, saisissez ce code et autorisez la connexion :",
+      "Your workshop: browser login, balance, prices and model catalog.": "Votre atelier : connexion par navigateur, solde, prix et catalogue de modèles.",
+      "Connect to Orchestrion": "Se connecter à Orchestrion",
+      "Connected · {name}\nBalance: {amount} bleatbucks": "Connecté · {name}\nSolde : {amount} bleatbucks",
+      "Sign in on the website through your browser. Krita does not store your password.": "Connectez-vous au site par votre navigateur. Krita ne conserve pas votre mot de passe.",
+      "Connection denied or code expired. Start sign-in again.": "Connexion refusée ou code expiré. Recommencez la connexion."
+    }
+  },
+  "id": {
+    "name": "Bahasa indonesia",
+    "translations": {
+      "Code from Krita": "Kode dari Krita",
+      "Checking website login…": "Memeriksa login situs…",
+      "Allow website storage and try again.": "Izinkan penyimpanan situs dan coba lagi.",
+      "Approved. Return to Krita to finish connecting.": "Disetujui. Kembali ke Krita untuk menyelesaikan koneksi.",
+      "Connection denied.": "Koneksi ditolak.",
+      "Device access expires after 30 days. Revoke it in your website key manager.": "Akses perangkat berakhir setelah 30 hari. Cabut akses di pengelola kunci situs.",
+      "Sign in on website": "Masuk ke situs",
+      "Connect": "Menghubungkan",
+      "Cancel sign-in": "Batalkan masuk",
+      "Sign in on the opened website, enter this code and approve the connection:": "Masuk di situs yang terbuka, masukkan kode ini, lalu setujui koneksi:",
+      "Your workshop: browser login, balance, prices and model catalog.": "Bengkel Anda: login peramban, saldo, harga, dan katalog model.",
+      "Connect to Orchestrion": "Hubungkan ke Orchestrion",
+      "Connected · {name}\nBalance: {amount} bleatbucks": "Terhubung · {name}\nSaldo: {amount} bleatbucks",
+      "Sign in on the website through your browser. Krita does not store your password.": "Masuk ke situs melalui peramban. Krita tidak menyimpan kata sandi Anda.",
+      "Connection denied or code expired. Start sign-in again.": "Koneksi ditolak atau kode kedaluwarsa. Mulai login kembali."
+    }
+  },
+  "it": {
+    "name": "Italiano",
+    "translations": {
+      "Code from Krita": "Codice di Krita",
+      "Checking website login…": "Verifica dell’accesso al sito…",
+      "Allow website storage and try again.": "Consenti l’archiviazione del sito e riprova.",
+      "Approved. Return to Krita to finish connecting.": "Approvato. Torna in Krita per completare la connessione.",
+      "Connection denied.": "Connessione negata.",
+      "Device access expires after 30 days. Revoke it in your website key manager.": "L’accesso scade dopo 30 giorni. Revocalo nella gestione delle chiavi del sito.",
+      "Sign in on website": "Accedi al sito",
+      "Connect": "Connetti",
+      "Cancel sign-in": "Annulla accesso",
+      "Sign in on the opened website, enter this code and approve the connection:": "Accedi al sito aperto, inserisci questo codice e approva la connessione:",
+      "Your workshop: browser login, balance, prices and model catalog.": "Il tuo laboratorio: accesso dal browser, saldo, prezzi e catalogo dei modelli.",
+      "Connect to Orchestrion": "Connetti a Orchestrion",
+      "Connected · {name}\nBalance: {amount} bleatbucks": "Connesso · {name}\nSaldo: {amount} bleatbucks",
+      "Sign in on the website through your browser. Krita does not store your password.": "Accedi al sito dal browser. Krita non memorizza la password.",
+      "Connection denied or code expired. Start sign-in again.": "Connessione negata o codice scaduto. Riavvia l’accesso."
+    }
+  },
+  "ja": {
+    "name": "日本語",
+    "translations": {
+      "Code from Krita": "Krita のコード",
+      "Checking website login…": "サイトのログインを確認中…",
+      "Allow website storage and try again.": "サイトのストレージを許可して再試行してください。",
+      "Approved. Return to Krita to finish connecting.": "承認されました。Krita に戻って接続を完了してください。",
+      "Connection denied.": "接続が拒否されました。",
+      "Device access expires after 30 days. Revoke it in your website key manager.": "デバイスのアクセスは 30 日後に期限切れになります。サイトのキー管理で取り消せます。",
+      "Sign in on website": "サイトにログイン",
+      "Connect": "接続",
+      "Cancel sign-in": "ログインをキャンセル",
+      "Sign in on the opened website, enter this code and approve the connection:": "開いたサイトにログインし、このコードを入力して接続を承認してください：",
+      "Your workshop: browser login, balance, prices and model catalog.": "あなたの工房：ブラウザーでのログイン、残高、料金、モデルカタログ。",
+      "Connect to Orchestrion": "Orchestrion に接続",
+      "Connected · {name}\nBalance: {amount} bleatbucks": "接続済み · {name}\n残高：{amount} bleatbucks",
+      "Sign in on the website through your browser. Krita does not store your password.": "ブラウザーからサイトにログインしてください。Krita はパスワードを保存しません。",
+      "Connection denied or code expired. Start sign-in again.": "接続が拒否されたか、コードの有効期限が切れました。ログインをやり直してください。"
+    }
+  },
+  "ko": {
+    "name": "한국어",
+    "translations": {
+      "Code from Krita": "Krita의 코드",
+      "Checking website login…": "웹사이트 로그인 확인 중…",
+      "Allow website storage and try again.": "웹사이트 저장소를 허용하고 다시 시도하세요.",
+      "Approved. Return to Krita to finish connecting.": "승인되었습니다. Krita로 돌아가 연결을 완료하세요.",
+      "Connection denied.": "연결이 거부되었습니다.",
+      "Device access expires after 30 days. Revoke it in your website key manager.": "기기 접근 권한은 30일 후 만료됩니다. 웹사이트 키 관리에서 해제할 수 있습니다.",
+      "Sign in on website": "웹사이트 로그인",
+      "Connect": "연결",
+      "Cancel sign-in": "로그인 취소",
+      "Sign in on the opened website, enter this code and approve the connection:": "열린 웹사이트에 로그인하고 이 코드를 입력한 뒤 연결을 승인하세요:",
+      "Your workshop: browser login, balance, prices and model catalog.": "나만의 작업실: 브라우저 로그인, 잔액, 가격, 모델 카탈로그.",
+      "Connect to Orchestrion": "Orchestrion에 연결",
+      "Connected · {name}\nBalance: {amount} bleatbucks": "연결됨 · {name}\n잔액: {amount} bleatbucks",
+      "Sign in on the website through your browser. Krita does not store your password.": "브라우저에서 웹사이트에 로그인하세요. Krita는 비밀번호를 저장하지 않습니다.",
+      "Connection denied or code expired. Start sign-in again.": "연결이 거부되었거나 코드가 만료되었습니다. 로그인을 다시 시작하세요."
+    }
+  },
+  "pt-br": {
+    "name": "Português do Brasil",
+    "translations": {
+      "Code from Krita": "Código do Krita",
+      "Checking website login…": "Verificando o login no site…",
+      "Allow website storage and try again.": "Permita o armazenamento do site e tente novamente.",
+      "Approved. Return to Krita to finish connecting.": "Aprovado. Volte ao Krita para concluir a conexão.",
+      "Connection denied.": "Conexão recusada.",
+      "Device access expires after 30 days. Revoke it in your website key manager.": "O acesso expira em 30 dias. Revogue-o no gerenciador de chaves do site.",
+      "Sign in on website": "Entrar no site",
+      "Connect": "Conectar",
+      "Cancel sign-in": "Cancelar login",
+      "Sign in on the opened website, enter this code and approve the connection:": "Entre no site aberto, digite este código e aprove a conexão:",
+      "Your workshop: browser login, balance, prices and model catalog.": "Sua oficina: login pelo navegador, saldo, preços e catálogo de modelos.",
+      "Connect to Orchestrion": "Conectar ao Orchestrion",
+      "Connected · {name}\nBalance: {amount} bleatbucks": "Conectado · {name}\nSaldo: {amount} bleatbucks",
+      "Sign in on the website through your browser. Krita does not store your password.": "Entre no site pelo navegador. O Krita não armazena sua senha.",
+      "Connection denied or code expired. Start sign-in again.": "Conexão recusada ou código expirado. Inicie o login novamente."
+    }
+  },
+  "ru": {
+    "name": "Русский",
+    "translations": {
+      "Code from Krita": "Код из Krita",
+      "Checking website login…": "Проверяем вход на сайт…",
+      "Allow website storage and try again.": "Разреши хранилище сайта и попробуй снова.",
+      "Approved. Return to Krita to finish connecting.": "Готово! Вернись в Krita — подключение завершится автоматически.",
+      "Connection denied.": "Подключение отклонено.",
+      "Device access expires after 30 days. Revoke it in your website key manager.": "Подключение действует 30 дней. Его можно отозвать на сайте в управлении ключами.",
+      "Sign in on website": "Войти на сайт",
+      "Connect": "Подключиться",
+      "Cancel sign-in": "Отменить вход",
+      "Sign in on the opened website, enter this code and approve the connection:": "В открывшейся вкладке войди на сайт, введи этот код и подтверди подключение:",
+      "Your workshop: browser login, balance, prices and model catalog.": "Твоя мастерская: вход через браузер, баланс, цена и каталог моделей.",
+      "Connect to Orchestrion": "Подключиться к Оркестриону",
+      "Connected · {name}\nBalance: {amount} bleatbucks": "Подключено · {name}\nБаланс: {amount} беелетиков",
+      "Sign in on the website through your browser. Krita does not store your password.": "Войди на сайте в браузере. Пароль не сохраняется в Krita.",
+      "Connection denied or code expired. Start sign-in again.": "Подключение отклонено или код истёк. Начни вход заново."
+    }
+  },
+  "th": {
+    "name": "ไทย",
+    "translations": {
+      "Code from Krita": "รหัสจาก Krita",
+      "Checking website login…": "กำลังตรวจสอบการเข้าสู่ระบบเว็บไซต์…",
+      "Allow website storage and try again.": "อนุญาตพื้นที่เก็บข้อมูลเว็บไซต์แล้วลองอีกครั้ง",
+      "Approved. Return to Krita to finish connecting.": "อนุมัติแล้ว กลับไปที่ Krita เพื่อเชื่อมต่อให้เสร็จ",
+      "Connection denied.": "การเชื่อมต่อถูกปฏิเสธ",
+      "Device access expires after 30 days. Revoke it in your website key manager.": "สิทธิ์เข้าถึงอุปกรณ์หมดอายุใน 30 วัน เพิกถอนได้ในตัวจัดการคีย์ของเว็บไซต์",
+      "Sign in on website": "เข้าสู่ระบบเว็บไซต์",
+      "Connect": "เชื่อมต่อ",
+      "Cancel sign-in": "ยกเลิกการเข้าสู่ระบบ",
+      "Sign in on the opened website, enter this code and approve the connection:": "เข้าสู่ระบบบนเว็บไซต์ที่เปิด ป้อนรหัสนี้ และอนุมัติการเชื่อมต่อ:",
+      "Your workshop: browser login, balance, prices and model catalog.": "พื้นที่ทำงานของคุณ: เข้าสู่ระบบผ่านเบราว์เซอร์ ยอดคงเหลือ ราคา และแคตตาล็อกโมเดล",
+      "Connect to Orchestrion": "เชื่อมต่อ Orchestrion",
+      "Connected · {name}\nBalance: {amount} bleatbucks": "เชื่อมต่อแล้ว · {name}\nยอดคงเหลือ: {amount} bleatbucks",
+      "Sign in on the website through your browser. Krita does not store your password.": "เข้าสู่ระบบเว็บไซต์ผ่านเบราว์เซอร์ Krita ไม่เก็บรหัสผ่านของคุณ",
+      "Connection denied or code expired. Start sign-in again.": "การเชื่อมต่อถูกปฏิเสธหรือรหัสหมดอายุ กรุณาเริ่มเข้าสู่ระบบใหม่"
+    }
+  },
+  "tr": {
+    "name": "Türkçe",
+    "translations": {
+      "Code from Krita": "Krita’daki kod",
+      "Checking website login…": "Site girişi denetleniyor…",
+      "Allow website storage and try again.": "Site depolamasına izin verin ve yeniden deneyin.",
+      "Approved. Return to Krita to finish connecting.": "Onaylandı. Bağlantıyı tamamlamak için Krita’ya dönün.",
+      "Connection denied.": "Bağlantı reddedildi.",
+      "Device access expires after 30 days. Revoke it in your website key manager.": "Cihaz erişimi 30 gün sonra sona erer. Sitedeki anahtar yöneticisinden iptal edebilirsiniz.",
+      "Sign in on website": "Siteye giriş yap",
+      "Connect": "Bağlan",
+      "Cancel sign-in": "Girişi iptal et",
+      "Sign in on the opened website, enter this code and approve the connection:": "Açılan sitede giriş yapın, bu kodu girin ve bağlantıyı onaylayın:",
+      "Your workshop: browser login, balance, prices and model catalog.": "Atölyeniz: tarayıcıdan giriş, bakiye, fiyatlar ve model kataloğu.",
+      "Connect to Orchestrion": "Orchestrion’a bağlan",
+      "Connected · {name}\nBalance: {amount} bleatbucks": "Bağlandı · {name}\nBakiye: {amount} bleatbucks",
+      "Sign in on the website through your browser. Krita does not store your password.": "Tarayıcınızdan siteye giriş yapın. Krita parolanızı saklamaz.",
+      "Connection denied or code expired. Start sign-in again.": "Bağlantı reddedildi veya kodun süresi doldu. Girişi yeniden başlatın."
+    }
+  },
+  "zh-cn": {
+    "name": "简体中文",
+    "translations": {
+      "Code from Krita": "Krita 验证码",
+      "Checking website login…": "正在检查网站登录…",
+      "Allow website storage and try again.": "请允许网站存储并重试。",
+      "Approved. Return to Krita to finish connecting.": "已批准。请返回 Krita 完成连接。",
+      "Connection denied.": "连接被拒绝。",
+      "Device access expires after 30 days. Revoke it in your website key manager.": "设备访问权限在 30 天后过期。可在网站密钥管理中撤销。",
+      "Sign in on website": "登录网站",
+      "Connect": "连接",
+      "Cancel sign-in": "取消登录",
+      "Sign in on the opened website, enter this code and approve the connection:": "在打开的网站登录，输入此验证码并批准连接：",
+      "Your workshop: browser login, balance, prices and model catalog.": "你的工作室：浏览器登录、余额、价格和模型目录。",
+      "Connect to Orchestrion": "连接到 Orchestrion",
+      "Connected · {name}\nBalance: {amount} bleatbucks": "已连接 · {name}\n余额：{amount} bleatbucks",
+      "Sign in on the website through your browser. Krita does not store your password.": "通过浏览器登录网站。Krita 不会保存你的密码。",
+      "Connection denied or code expired. Start sign-in again.": "连接被拒绝或验证码已过期。请重新登录。"
+    }
+  },
+  "zh-tw": {
+    "name": "正體中文",
+    "translations": {
+      "Code from Krita": "Krita 驗證碼",
+      "Checking website login…": "正在檢查網站登入…",
+      "Allow website storage and try again.": "請允許網站儲存並重試。",
+      "Approved. Return to Krita to finish connecting.": "已核准。請返回 Krita 完成連線。",
+      "Connection denied.": "連線遭拒。",
+      "Device access expires after 30 days. Revoke it in your website key manager.": "裝置存取權限在 30 天後到期。可在網站金鑰管理中撤銷。",
+      "Sign in on website": "登入網站",
+      "Connect": "連線",
+      "Cancel sign-in": "取消登入",
+      "Sign in on the opened website, enter this code and approve the connection:": "在開啟的網站登入，輸入此驗證碼並核准連線：",
+      "Your workshop: browser login, balance, prices and model catalog.": "你的工作室：瀏覽器登入、餘額、價格和模型目錄。",
+      "Connect to Orchestrion": "連線至 Orchestrion",
+      "Connected · {name}\nBalance: {amount} bleatbucks": "已連線 · {name}\n餘額：{amount} bleatbucks",
+      "Sign in on the website through your browser. Krita does not store your password.": "透過瀏覽器登入網站。Krita 不會儲存你的密碼。",
+      "Connection denied or code expired. Start sign-in again.": "連線遭拒或驗證碼已過期。請重新登入。"
+    }
+  }
+}

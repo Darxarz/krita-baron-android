@@ -1,0 +1,28 @@
+{
+  "id": "zh-cn",
+  "name": "简体中文",
+  "translations": {
+    "%1 · %2 bleatbucks": "已连接 · %1 · 余额：%2 bleatbucks",
+    "Character mask — editable": "角色蒙版 — 可编辑",
+    "Connection": "连接",
+    "Connection denied or code expired. Start sign-in again.": "连接被拒绝或验证码已过期。请重新登录。",
+    "Edit": "编辑",
+    "Enter the website address: https://orchestrion.su": "请输入网站地址：https://orchestrion.su",
+    "Generate": "生成",
+    "Identity": "身份",
+    "Internet connections require HTTPS": "互联网连接需要 HTTPS",
+    "Model": "模型",
+    "Models": "模型",
+    "Not connected": "未连接",
+    "Prompt": "提示词",
+    "Scale": "缩放",
+    "Seed": "种子",
+    "Separate background": "分离背景",
+    "Sign out": "退出",
+    "Sign-in timed out. Start again.": "登录超时。请重新开始。",
+    "Strength": "强度",
+    "Style": "风格 (Style)",
+    "Upscale": "放大",
+    "≈ %1 bleatbucks": "≈ %1 bleatbucks"
+  }
+}

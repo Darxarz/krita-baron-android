@@ -1,0 +1,24 @@
+{
+  "id": "th",
+  "name": "ไทย",
+  "translations": {
+    "%1 · %2 bleatbucks": "เชื่อมต่อแล้ว · %1 · ยอดคงเหลือ: %2 bleatbucks",
+    "Character mask — editable": "มาสก์ตัวละคร — แก้ไขได้",
+    "Connection": "เชื่อมต่อ",
+    "Connection denied or code expired. Start sign-in again.": "การเชื่อมต่อถูกปฏิเสธหรือรหัสหมดอายุ กรุณาเริ่มเข้าสู่ระบบใหม่",
+    "Enter the website address: https://orchestrion.su": "ป้อนที่อยู่เว็บไซต์: https://orchestrion.su",
+    "Generate": "สร้างภาพ",
+    "Identity": "อัตลักษณ์",
+    "Internet connections require HTTPS": "การเชื่อมต่ออินเทอร์เน็ตต้องใช้ HTTPS",
+    "Models": "โมเดล",
+    "Scale": "Scale",
+    "Seed": "ชุดตัวเลข Noise",
+    "Separate background": "แยกพื้นหลัง",
+    "Sign out": "ออกจากระบบ",
+    "Sign-in timed out. Start again.": "หมดเวลาเข้าสู่ระบบ กรุณาเริ่มใหม่",
+    "Strength": "Strength",
+    "Style": "สไตล์",
+    "Upscale": "ขยายภาพ",
+    "≈ %1 bleatbucks": "≈ %1 bleatbucks"
+  }
+}

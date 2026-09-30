@@ -1,0 +1,16 @@
+<RCC><qresource prefix="/baron">
+<file>language/en.json</file>
+<file>language/es-ca.json</file>
+<file>language/es.json</file>
+<file>language/fr.json</file>
+<file>language/id.json</file>
+<file>language/it.json</file>
+<file>language/ja.json</file>
+<file>language/ko.json</file>
+<file>language/pt-br.json</file>
+<file>language/ru.json</file>
+<file>language/th.json</file>
+<file>language/tr.json</file>
+<file>language/zh-cn.json</file>
+<file>language/zh-tw.json</file>
+</qresource></RCC>

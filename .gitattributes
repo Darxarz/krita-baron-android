@@ -1,0 +1,3 @@
+* text=auto eol=lf
+# Keep the reviewed server snapshot byte-for-byte identical to its SHA-256 manifest.
+server/vendor/** -text

@@ -1,0 +1,27 @@
+{
+  "id": "tr",
+  "name": "Türkçe",
+  "translations": {
+    "%1 · %2 bleatbucks": "Bağlandı · %1 · Bakiye: %2 bleatbucks",
+    "Character mask — editable": "Karakter maskesi — düzenlenebilir",
+    "Connection": "Bağlantı",
+    "Connection denied or code expired. Start sign-in again.": "Bağlantı reddedildi veya kodun süresi doldu. Girişi yeniden başlatın.",
+    "Edit": "Düzenle",
+    "Enter the website address: https://orchestrion.su": "Site adresini girin: https://orchestrion.su",
+    "Generate": "Oluştur",
+    "Identity": "Kimlik",
+    "Internet connections require HTTPS": "İnternet bağlantıları HTTPS gerektirir",
+    "Model": "Model",
+    "Models": "Modeller",
+    "Prompt": "Prompt",
+    "Scale": "Ölçek",
+    "Seed": "Seed",
+    "Separate background": "Arka planı ayır",
+    "Sign out": "Çıkış yap",
+    "Sign-in timed out. Start again.": "Giriş süresi doldu. Yeniden başlayın.",
+    "Strength": "Güç",
+    "Style": "Stil",
+    "Upscale": "Ölçeklendir",
+    "≈ %1 bleatbucks": "≈ %1 bleatbucks"
+  }
+}

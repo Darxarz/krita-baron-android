@@ -1,0 +1,162 @@
+diff --git a/services/authIdentity.js b/services/authIdentity.js
+index 2cc4f2e..78075bc 100644
+--- a/services/authIdentity.js
++++ b/services/authIdentity.js
+@@ -139,7 +139,7 @@ function selectSessionsToEvict(sessions, max, keepId = null) {
+ async function revokeUserSessions(userId, { exceptKeyId = null } = {}) {
+   if (!userId) return [];
+   const ApiKey = getApiKey();
+-  const whereClause = { userId, type: 'session', status: 'active' };
++  const whereClause = { userId, type: { [Op.in]: ['session', 'krita_device'] }, status: 'active' };
+   if (exceptKeyId != null) whereClause.id = { [Op.ne]: exceptKeyId };
+   const keys = await ApiKey.findAll({ where: whereClause, attributes: ['id', 'keyHash'] });
+   if (keys.length === 0) return [];
+diff --git a/user-portal/src/components/ApiKeysManager.js b/user-portal/src/components/ApiKeysManager.js
+index 414ce1c..d2ae1b3 100644
+--- a/user-portal/src/components/ApiKeysManager.js
++++ b/user-portal/src/components/ApiKeysManager.js
+@@ -127,7 +127,7 @@ function ApiKeysManager() {
+     return { text, tone: 'default', expired: false };
+   };
+ 
+-  const personalKeys = keys.filter((k) => k.type === 'personal');
++  const personalKeys = keys.filter((k) => k.type === 'personal' || k.type === 'krita_device');
+   const sessionKeys = keys.filter((k) => k.type === 'session' || !k.type);
+ 
+   const header = (
+@@ -288,7 +288,7 @@ function ApiKeysManager() {
+                     <div style={{ flex: 1, minWidth: 0 }}>
+                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.4rem', flexWrap: 'wrap' }}>
+                         <h4 style={{ margin: 0, color: 'var(--accent-primary)' }}>{key.name}</h4>
+-                        <Pill tone="accent">{t('apiKeys.personalBadge', 'personal')}</Pill>
++                        <Pill tone="accent">{key.type === 'krita_device' ? 'Krita · Baron' : t('apiKeys.personalBadge', 'personal')}</Pill>
+                         {revoked && <Pill tone="danger">{t('apiKeys.revoked', 'Revoked')}</Pill>}
+                       </div>
+                       <div style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
+diff --git a/userPortalServer.js b/userPortalServer.js
+index 138fd2b..6d2bb7d 100644
+--- a/userPortalServer.js
++++ b/userPortalServer.js
+@@ -965,6 +965,8 @@ async function createUserPortalServer() {
+   // прокси Fabulae и статику.
+   app.use(portalSecurity.securityHeaders());
+   app.use(portalSecurity.crossSiteGuard({ logger }));
++  // Device credentials never reach unrelated portal routes or proxies.
++  app.use(require('./services/kritaDeviceService').scopeGuard);
+ 
+   // WebSocket сервер для inpaint прогресса
+   const wssInpaint = new WebSocket.Server({ noServer: true });
+@@ -1431,6 +1433,67 @@ async function createUserPortalServer() {
+     return null;
+   }
+ 
++  app.use('/api/krita/device', rateLimit({
++    windowMs: 60000, limit: 30, standardHeaders: 'draft-7', legacyHeaders: false,
++    keyGenerator: (req) => `krita:${getCleanIP(req) || 'unknown'}`, validate: false,
++  }));
++  app.use(require('./routes/kritaIntegration').createKritaIntegration({
++    ApiKey,
++    authenticate: authenticateKritaToken,
++    billing: { config: () => billingService.getBillingConfig(), compute: kritaBilling.computeKritaCost },
++    compileNative: require('./services/kritaNativeCompiler').createCompiler(),
++    getNativeContext: async (user) => {
++      const server = await selectKritaServer(user);
++      if (!server) throw new Error('No ComfyUI servers available');
++      const object_info = await comfyService.getObjectInfo(server.ip, server.port);
++      const inspect = async (folder) => {
++        const models = {};
++        for (let offset = 0; offset < 10000; offset += 100) {
++          const { data } = await axios.get(`http://${server.ip}:${server.port}/api/etn/model_info/${folder}`, {
++            params: { offset, limit: 100 }, timeout: 30000,
++          });
++          const total = Number(data._meta?.total || 0);
++          delete data._meta;
++          Object.assign(models, data);
++          if (!total || offset + 100 >= total) break;
++        }
++        return models;
++      };
++      const [checkpoints, diffusion_models] = await Promise.all([inspect('checkpoints'), inspect('diffusion_models')]);
++      return { object_info, checkpoints, diffusion_models };
++    },
++    getModels: async (user) => {
++      const server = await selectKritaServer(user);
++      if (!server) throw new Error('No ComfyUI servers available');
++      const info = await comfyService.getObjectInfo(server.ip, server.port);
++      const list = (node, input) => info[node]?.input?.required?.[input]?.[0] || [];
++      const raw = [
++        ...list('CheckpointLoaderSimple', 'ckpt_name').map((name) => ({ name, kind: 'checkpoint' })),
++        ...list('UNETLoader', 'unet_name').map((name) => ({ name, kind: 'checkpoint' })),
++        ...list('LoraLoader', 'lora_name').map((name) => ({ name, kind: 'lora' })),
++      ];
++      const entries = await ModelCatalogEntry.findAll({ attributes: ['fileName', 'name', 'baseModel', 'imageUrl', 'thumbnailUrl', 'trainedWordsJson'], limit: 10000 });
++      const byName = new Map();
++      for (const entry of entries) {
++        const name = String(entry.fileName || '').replace(/\\/g, '/');
++        if (!byName.has(name)) byName.set(name, entry);
++        else byName.set(name, null); // Ambiguous filenames must not borrow another model's metadata.
++      }
++      const enriched = await enrichLorasWithCatalogImages(raw.filter((m) => m.kind === 'lora'));
++      const loraMetadata = new Map(enriched.map((m) => [m.name, m]));
++      return raw.map((model) => {
++        const normalized = model.name.replace(/\\/g, '/');
++        const filename = normalized.split('/').pop();
++        const entry = byName.get(normalized) || byName.get(filename);
++        const sidecar = loraMetadata.get(model.name);
++        let triggers = [];
++        try { triggers = JSON.parse(entry?.trainedWordsJson || '[]'); } catch (_) { /* optional metadata */ }
++        triggers = sidecar?.triggerWords?.length ? sidecar.triggerWords : triggers;
++        return { ...model, title: sidecar?.displayName || entry?.name || filename.replace(/\.(safetensors|ckpt|pt)$/i, ''), family: sidecar?.family || sidecar?.baseModel || entry?.baseModel || normalized.split('/').slice(0, -1).join('/') || 'Other', preview: sidecar?.imageUrl || directCivitaiImageUrl(entry?.imageUrl, entry?.thumbnailUrl) || '', triggers: Array.isArray(triggers) ? triggers.filter((t) => typeof t === 'string') : [] };
++      });
++    },
++  }));
++
+   // Preflight для /krita. Плагин Krita — не браузер, CORS ему не нужен;
+   // Access-Control-Allow-Origin: * здесь больше не отдаём (раньше любой
+   // сайт мог читать ответы прокси из браузера).
+@@ -1483,7 +1546,8 @@ async function createUserPortalServer() {
+     // Резерв монет под /prompt — объявлен до try, чтобы его снимал и catch ниже
+     let releaseKritaReservation = () => {};
+     try {
+-      const token = req.params.token;
++      const token = req.params.token === 'connection'
++        ? require('./services/kritaDeviceService').extractToken(req) : req.params.token;
+ 
+       // 1. Аутентификация
+       const user = await authenticateKritaToken(token);
+@@ -5490,7 +5554,8 @@ async function createUserPortalServer() {
+           userId: apiKey.user.id,
+           [Op.or]: [
+             { type: 'personal' },
+-            { type: 'session', status: 'active' }
++            { type: 'session', status: 'active' },
++            { type: 'krita_device', status: 'active' }
+           ]
+         },
+         attributes: ['id', 'keyPrefix', 'name', 'type', 'expiresAt', 'lastUsedAt', 'status', 'createdAt'],
+@@ -10988,7 +11053,14 @@ Now wait for user input and give the best possible technical advice to make thei
+   });
+ 
+   const handleUpgrade = (req, socket, head) => {
+-    const { pathname } = new URL(req.url, `http://${req.headers.host}`);
++    const { pathname, searchParams } = new URL(req.url, `http://${req.headers.host}`);
++    const deviceToken = require('./services/kritaDeviceService').extractToken(req)
++      || searchParams.get('token') || searchParams.get('api_key') || '';
++    if (deviceToken.startsWith('ork_krita_') && pathname !== '/krita/connection/ws' && pathname !== '/krita/connection/api/ws') {
++      socket.write('HTTP/1.1 403 Forbidden\r\n\r\n');
++      socket.destroy();
++      return;
++    }
+     
+     // Проверяем существующие WebSocket обработчики
+     if (pathname === '/ws/inpaint') {
+@@ -11011,7 +11083,8 @@ Now wait for user input and give the best possible technical advice to make thei
+         return;
+       }
+ 
+-      const wsToken = pathParts[2];
++      const wsToken = pathParts[2] === 'connection'
++        ? require('./services/kritaDeviceService').extractToken(req) : pathParts[2];
+       const restPath = '/' + pathParts.slice(3).join('/');
+       const queryString = req.url.includes('?') ? req.url.substring(req.url.indexOf('?')) : '';
+       // По WebSocket плагину нужен только поток прогресса /ws

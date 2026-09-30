@@ -1,0 +1,26 @@
+{
+  "id": "es-ca",
+  "name": "Català (Valencià)",
+  "translations": {
+    "%1 · %2 bleatbucks": "Connectat · %1 · Saldo: %2 bleatbucks",
+    "Character mask — editable": "Màscara del personatge — editable",
+    "Connection": "Connexió",
+    "Connection denied or code expired. Start sign-in again.": "Connexió denegada o codi caducat. Torna a iniciar sessió.",
+    "Enter the website address: https://orchestrion.su": "Introdueix l’adreça del lloc web: https://orchestrion.su",
+    "Generate": "Generar",
+    "Identity": "Identitat",
+    "Internet connections require HTTPS": "Les connexions per Internet requereixen HTTPS",
+    "Model": "Model",
+    "Models": "Models",
+    "Prompt": "Indicador",
+    "Scale": "Escala",
+    "Seed": "Posició inicial",
+    "Separate background": "Separar el fons",
+    "Sign out": "Tancar sessió",
+    "Sign-in timed out. Start again.": "S’ha esgotat el temps d’inici de sessió. Torna a començar.",
+    "Strength": "Intensitat",
+    "Style": "Estil",
+    "Upscale": "Augmentar escala",
+    "≈ %1 bleatbucks": "≈ %1 bleatbucks"
+  }
+}

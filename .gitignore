@@ -1,0 +1,13 @@
+build/
+tools/
+upstream/
+.venv/
+__pycache__/
+*.pyc
+*.apk
+*.aab
+*.keystore
+*.user
+.env
+test-results/
+server/vendor/.appdata/

@@ -1,0 +1,8 @@
+{
+  "include": ["server/compile_workflow.py", "scripts/*.py", "tests/test_engine.py"],
+  "exclude": ["server/vendor", "build", "tools"],
+  "extraPaths": ["server", "server/vendor/tests/mock", "server/vendor"],
+  "pythonVersion": "3.10",
+  "typeCheckingMode": "basic",
+  "reportMissingModuleSource": false
+}

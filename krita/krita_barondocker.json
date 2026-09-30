@@ -1,0 +1,7 @@
+{
+    "Id": "Baron Orchestrion Docker",
+    "Type": "Service",
+    "X-KDE-Library": "kritabarondocker",
+    "X-KDE-ServiceTypes": ["Krita/Dock"],
+    "X-Krita-Version": "28"
+}

@@ -1,0 +1,1 @@
+f0a2344f5281d8ca5ba4b5670e8003730c7eff3c32471e699d2c5b401be66c76  krita-baron-android-arm64-v0.1.0-preview.apk

@@ -1,0 +1,23 @@
+{
+  "id": "id",
+  "name": "Bahasa indonesia",
+  "translations": {
+    "%1 · %2 bleatbucks": "Terhubung · %1 · Saldo: %2 bleatbucks",
+    "Character mask — editable": "Masker karakter — dapat diedit",
+    "Connection": "Koneksi",
+    "Connection denied or code expired. Start sign-in again.": "Koneksi ditolak atau kode kedaluwarsa. Mulai login kembali.",
+    "Enter the website address: https://orchestrion.su": "Masukkan alamat situs: https://orchestrion.su",
+    "Generate": "Hasilkan",
+    "Identity": "Identitas",
+    "Internet connections require HTTPS": "Koneksi Internet memerlukan HTTPS",
+    "Models": "Model",
+    "Scale": "Skala",
+    "Seed": "Benih",
+    "Separate background": "Pisahkan latar belakang",
+    "Sign out": "Keluar",
+    "Sign-in timed out. Start again.": "Waktu login habis. Mulai kembali.",
+    "Strength": "Kekuatan",
+    "Style": "Gaya",
+    "≈ %1 bleatbucks": "≈ %1 bleatbucks"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "id": "ko",
+  "name": "한국어",
+  "translations": {
+    "%1 · %2 bleatbucks": "연결됨 · %1 · 잔액: %2 bleatbucks",
+    "Character mask — editable": "캐릭터 마스크 — 편집 가능",
+    "Connection": "연결",
+    "Connection denied or code expired. Start sign-in again.": "연결이 거부되었거나 코드가 만료되었습니다. 로그인을 다시 시작하세요.",
+    "Enter the website address: https://orchestrion.su": "웹사이트 주소를 입력하세요: https://orchestrion.su",
+    "Generate": "생성",
+    "Identity": "동일성",
+    "Internet connections require HTTPS": "인터넷 연결에는 HTTPS가 필요합니다",
+    "Model": "모델",
+    "Models": "모델",
+    "Prompt": "프롬프트",
+    "Scale": "스케일",
+    "Seed": "시드",
+    "Separate background": "배경 분리",
+    "Sign out": "로그아웃",
+    "Sign-in timed out. Start again.": "로그인 시간이 초과되었습니다. 다시 시작하세요.",
+    "Strength": "강도",
+    "Style": "스타일",
+    "Upscale": "업스케일",
+    "≈ %1 bleatbucks": "≈ %1 bleatbucks"
+  }
+}

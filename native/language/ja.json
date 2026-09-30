@@ -1,0 +1,28 @@
+{
+  "id": "ja",
+  "name": "日本語",
+  "translations": {
+    "%1 · %2 bleatbucks": "接続済み · %1 · 残高：%2 bleatbucks",
+    "Character mask — editable": "キャラクターマスク — 編集可能",
+    "Connection": "接続",
+    "Connection denied or code expired. Start sign-in again.": "接続が拒否されたか、コードの有効期限が切れました。ログインをやり直してください。",
+    "Edit": "編集",
+    "Enter the website address: https://orchestrion.su": "サイトのアドレスを入力してください：https://orchestrion.su",
+    "Generate": "生成",
+    "Identity": "同一性",
+    "Internet connections require HTTPS": "インターネット接続には HTTPS が必要です",
+    "Model": "モード",
+    "Models": "モデル",
+    "Not connected": "未接続",
+    "Prompt": "プロンプト",
+    "Scale": "倍率",
+    "Seed": "シード",
+    "Separate background": "背景を分離",
+    "Sign out": "サインアウト",
+    "Sign-in timed out. Start again.": "ログインがタイムアウトしました。やり直してください。",
+    "Strength": "強度",
+    "Style": "スタイル",
+    "Upscale": "画像拡大",
+    "≈ %1 bleatbucks": "≈ %1 bleatbucks"
+  }
+}
