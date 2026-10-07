@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -eo pipefail
-baron_root="${BARON_BUILD_ROOT:-/opt/baron-android}"
+baron_root="${BARON_BUILD_ROOT:-/opt/baron-stable-5.3.4}"
 baron_prefix="$baron_root/krita/_install"
 if [[ -f "$baron_prefix/lib/cmake/Qt5WebSockets/Qt5WebSocketsConfig.cmake" ]]; then
     exit 0

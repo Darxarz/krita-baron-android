@@ -53,7 +53,7 @@ if args.phase == "prepare":
     history = _HistoryResult("python-job", 0, offsets, params, JobKind.diffusion, {1: True})
     state = {
         "version": 1,
-        "root": {"prompt": "python document prompt"},
+        "root": {"positive": "python document prompt"},
         "history": [asdict(history)],
         "custom": {},
         "control": [],
@@ -70,7 +70,7 @@ if args.phase == "prepare":
     print("Python WebP batch fixture exported.")
 else:
     from ai_diffusion.settings import settings
-    from tests.test_persistence import _make_model
+    from tests.test_persistence import _make_model  # pyright: ignore[reportMissingImports]
 
     document = Krita.instance().openDocument("native history exchange")
     annotations = json.loads(args.fixture.read_text())
@@ -79,6 +79,9 @@ else:
     with tempfile.TemporaryDirectory() as temporary:
         model = _make_model(document, Path(temporary))
         sync = ModelSync(model)
+        assert model.regions.positive == "native document prompt"
+        assert type(model.upscale.factor) is float and model.upscale.factor == 2.0
+        assert model.upscale.unblur_strength == 0.0
         assert len(sync._history) == 2
         native = sync._history[1]
         job = model.jobs.find(native.id)

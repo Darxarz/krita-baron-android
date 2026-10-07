@@ -64,7 +64,9 @@ shutil.copyfile(root / "android/version.json", target / "version.json")
 text = gradle.read_text(encoding="utf-8")
 text = re.sub(r"(?m)^\s*versionCode .*", f"        versionCode {version['version_code']}", text)
 text = re.sub(
-    r"(?m)^\s*versionName .*", f'        versionName "5.4.0-baron.{version["version"]}"', text
+    r"(?m)^\s*versionName .*",
+    f'        versionName "{version["krita_version"]}-baron.{version["version"]}"',
+    text,
 )
 gradle.write_text(text, encoding="utf-8")
 manifest = source / "packaging/android/apk/AndroidManifest.xml"

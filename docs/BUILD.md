@@ -3,8 +3,9 @@
 ## Android ARM64
 
 The full Krita build runs on Linux. On the development laptop it uses WSL2,
-Ubuntu 24.04 and `/opt/baron-android`. The Windows source repository is mounted
-as `/mnt/d/krita-baron-android-native`.
+Ubuntu 24.04. The stable migration uses `/opt/baron-stable-5.3.4`, separate from
+the previous `/opt/baron-android` development build. The Windows source worktree
+is mounted as `/mnt/d/krita-baron-stable`.
 
 Prerequisites:
 
@@ -18,6 +19,7 @@ sudo apt-get install build-essential cmake ninja-build git curl unzip aria2 \
 Run from this repository:
 
 ```sh
+export BARON_BUILD_ROOT=/opt/baron-stable-5.3.4
 bash scripts/download-ndk.sh
 bash scripts/install-android-sdk.sh
 bash scripts/bootstrap-android.sh
@@ -28,11 +30,12 @@ The build requires substantial disk space and downloads KDE's Android dependency
 packages. First SDK setup accepts the Android SDK licences. Read those terms
 before running it on a new machine.
 
-Pinned Krita source: `96434e2e71aae3a509506518bf83c312b634ac66`.
-Qt 5 builds identify this source as `5.4.0-prealpha`. It is a development build.
+Pinned Krita source: `e7e52a72ed37ecaf9ffaa2fab836b7c2f5539d1f` (upstream `v6.0.4`).
+Built with Qt 5, these official release sources produce stable Krita `5.3.4`.
+Qt 6 builds use the `6.0.4` version; this Android edition explicitly uses Qt 5.
 NDK r27d, Android native API 24, Java 17; KDE dependencies include
 patched Qt 5.15.7 and KF5 5.101.0. The package builder uses Gradle 8.13 / AGP 8.12.
-SDK platform 36 is installed; Qt's first package selects compile/target SDK 35.
+The stable-base APK uses compile/target SDK 36 and native/minimum API 24.
 This was verified from the produced APK rather than inferred from CI settings.
 
 Dependency tooling used for the initial build:
@@ -49,6 +52,9 @@ The overlay changes applicationId to `org.krita.baron`. The first debug APK adds
 `.debug`, so it can coexist with official Krita. Java's existing `org.krita`
 namespace is preserved. PythonLibrary discovery is disabled for this APK build.
 Android signing keys and APKs are excluded from Git.
+Updates retain the original Baron package identity and signer. The Android
+version code continues increasing even though the Krita base changes from 5.4
+development sources to stable 5.3.4. Do not uninstall the existing Baron app.
 
 Only use `install-overlay.py` on a clean isolated full Krita checkout. The
 `refresh-overlay.py` script updates the previously installed Baron files only.

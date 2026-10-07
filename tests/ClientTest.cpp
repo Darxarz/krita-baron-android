@@ -2821,6 +2821,41 @@ private slots:
         QVERIFY(transparent.error.isEmpty()); QCOMPARE(transparent.images.size(),1);
         QCOMPARE(transparent.images[0].pixelColor(0,0).alpha(),40);
     }
+    void historyPythonFloatTypesAndDocumentPrompts() {
+        QTemporaryDir directory;
+        QMap<QString, QByteArray> annotations;
+        annotations["ai_diffusion/ui.json"] = R"({"version":1,"live":{"strength":1},"control":[{"start":0,"end":1,"strength":50}],"custom":{"params":{"factor":2}},"history":[]})";
+        HistoryStore store("float-compatible", directory.path());
+        QVERIFY(store.load([&](const QString& key) { return annotations.value(key); }));
+        store.setDocumentSettings({ {"strength", 1}, {"resolution", 1}, {"batch", 2}, {"mode", "edit"},
+            {"prompt_banks", QJsonObject {
+                {"generate", QJsonObject {{"prompt", "generation \"quoted\" ✓"}, {"negative", "blurry"}}},
+                {"edit", QJsonObject {{"prompt", "edit\nsecond line"}, {"negative", "bad"}}} }},
+            {"upscale_options", QJsonObject {{"factor", 2}, {"strength", 1}, {"unblur_strength", 0}}} });
+        auto verify = [&] {
+            const auto bytes = annotations["ai_diffusion/ui.json"];
+            QVERIFY(bytes.contains("\"factor\":2.0"));
+            QVERIFY(bytes.contains("\"strength\":1.0"));
+            QVERIFY(bytes.contains("\"unblur_strength\":0.0"));
+            QVERIFY(bytes.contains("\"start\":0.0"));
+            QVERIFY(bytes.contains("\"end\":1.0"));
+            QVERIFY(bytes.contains("\"strength\":50"));
+            QVERIFY(bytes.contains("\"batch_count\":2,"));
+            const auto state = QJsonDocument::fromJson(bytes).object();
+            QVERIFY(!state.isEmpty());
+            QCOMPARE(state["root"].toObject()["positive"].toString(), QString("generation \"quoted\" ✓"));
+            QCOMPARE(state["edit"].toObject()["positive"].toString(), QString("edit\nsecond line"));
+            QVERIFY(state["edit_mode"].toBool());
+            QCOMPARE(state["custom"].toObject()["params"].toObject()["factor"].toInt(), 2);
+        };
+        const auto write = [&](const QString& key, const QByteArray& bytes) { annotations[key] = bytes; };
+        QVERIFY(store.save(write));
+        verify();
+        bool finished = false;
+        store.saveAsync(this, write, [&](const QString& error) { QVERIFY(error.isEmpty()); finished = true; });
+        verify();
+        QTRY_VERIFY(finished);
+    }
     void historyAnnotationsAndRecovery() {
         QTemporaryDir directory;
         QMap<QString, QByteArray> annotations;
@@ -2922,6 +2957,9 @@ private slots:
         QCOMPARE(HistoryStore::settings(python)["seed"].toString(), QString("4294967295"));
         QCOMPARE(store.image("python-job", 0).size(), QSize(32, 24));
         QCOMPARE(store.image("python-job", 1).pixelColor(0, 0).alpha(), 70);
+        store.setDocumentSettings({ {"strength", 1}, {"resolution", 1}, {"batch", 1}, {"mode", "generate"},
+            {"prompt", "native document prompt"}, {"negative", "blurry"},
+            {"upscale_options", QJsonObject {{"factor", 2}, {"strength", 1}, {"unblur_strength", 0}}} });
         QImage rgba(32, 24, QImage::Format_ARGB32);
         rgba.fill(qRgba(10, 120, 240, 70));
         const auto native = store.append({ rgba, rgba }, QRect(42, 80, 32, 24),

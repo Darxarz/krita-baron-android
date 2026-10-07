@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-baron_root="${BARON_BUILD_ROOT:-/opt/baron-android}"
+baron_root="${BARON_BUILD_ROOT:-/opt/baron-stable-5.3.4}"
 export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
 export ANDROID_HOME="$baron_root/android/sdk"
 baron_sdkmanager="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -eo pipefail
-baron_root="${BARON_BUILD_ROOT:-/opt/baron-android}"
+baron_root="${BARON_BUILD_ROOT:-/opt/baron-stable-5.3.4}"
 baron_repo="$(cd "$(dirname "$0")/.." && pwd)"
 export BARON_PERSONAL_FONT_DIR="${BARON_PERSONAL_FONT_DIR:-$baron_root/personal-fonts}"
 [[ -f "$BARON_PERSONAL_FONT_DIR/manifest.json" ]] || {

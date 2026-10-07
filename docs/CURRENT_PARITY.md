@@ -1,6 +1,6 @@
 # Current parity: Python plugin → Android
 
-Updated 2026-10-08. Reference: desktop `1.53.0-baron.14`, Android `0.1.35`.
+Updated 2026-10-08. Reference: desktop `1.53.0-baron.15`, Android `0.1.36`.
 This report compares current source, rather than reusing the 0.1.12 audit.
 **Implemented is not a claim that every GPU/backend/device combination was tested.**
 
@@ -19,7 +19,7 @@ were absent are now obsolete. Source: `BaronPanel`, `InpaintWidget`, `UpscaleWid
 
 ## Missing or partial
 
-| Mechanism in the Python plugin | Android 0.1.35 | Remaining work and source evidence |
+| Mechanism in the Python plugin | Android 0.1.36 | Remaining work and source evidence |
 | --- | --- | --- |
 | Live workspace | Missing | Continuous regeneration after drawing, live preview/application and live-specific settings. `BaronPanel` only creates Generation, Upscale and Background workspaces; `InterfaceSettings` explicitly disables Live controls. |
 | Animation workspace | Missing | Frame/keyframe/timeline generation and batch processing. Desktop: `ui/animation.py`, `model/model.py`; no native counterpart. |

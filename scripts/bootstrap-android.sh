@@ -1,12 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
 baron_repo="$(cd "$(dirname "$0")/.." && pwd)"
-baron_root="${BARON_BUILD_ROOT:-/opt/baron-android}"
+baron_root="${BARON_BUILD_ROOT:-/opt/baron-stable-5.3.4}"
 mkdir -p "$baron_root"
 if [[ ! -d "$baron_root/krita/.git" ]]; then
     git init "$baron_root/krita"
-    git -C "$baron_root/krita" fetch --depth 1 https://github.com/KDE/krita.git 96434e2e71aae3a509506518bf83c312b634ac66
+    git -C "$baron_root/krita" fetch --depth 1 https://github.com/KDE/krita.git e7e52a72ed37ecaf9ffaa2fab836b7c2f5539d1f
     git -C "$baron_root/krita" checkout --detach FETCH_HEAD
+fi
+if [[ "$(git -C "$baron_root/krita" rev-parse HEAD)" != e7e52a72ed37ecaf9ffaa2fab836b7c2f5539d1f ]]; then
+    echo "This release requires Krita 5.3.4 sources. Choose a fresh BARON_BUILD_ROOT; existing checkouts are never reset." >&2
+    exit 1
 fi
 if [[ ! -d "$baron_root/krita/krita-deps-management/.git" ]]; then
     git init "$baron_root/krita/krita-deps-management"
@@ -19,6 +23,9 @@ fi
 python3 -m venv "$baron_root/venv"
 "$baron_root/venv/bin/pip" install -q -r "$baron_root/krita/krita-deps-management/requirements.txt"
 cd "$baron_root/krita"
+if ! grep -qxF krita-deps-management .git/info/exclude; then
+    printf '\nkrita-deps-management\n' >> .git/info/exclude
+fi
 if [[ ! -d plugins/dockers/baron ]]; then
     python3 "$baron_repo/scripts/install-overlay.py" "$baron_root/krita"
 fi

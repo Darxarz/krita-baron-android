@@ -15,6 +15,38 @@
 #include <QUuid>
 
 namespace {
+QByteArray pluginJson(const QJsonValue& value, const QString& path = {}) {
+    if (value.isObject()) {
+        QByteArray result("{");
+        const auto object = value.toObject();
+        for (auto it = object.begin(); it != object.end(); ++it) {
+            if (result.size() > 1) result += ',';
+            result += pluginJson(it.key()) + ':' + pluginJson(it.value(), path + '/' + it.key());
+        }
+        return result + '}';
+    }
+    if (value.isArray()) {
+        QByteArray result("[");
+        for (const auto& item : value.toArray()) {
+            if (result.size() > 1) result += ',';
+            result += pluginJson(item, path + "/[]");
+        }
+        return result + ']';
+    }
+    auto result = QJsonDocument(QJsonArray {value}).toJson(QJsonDocument::Compact);
+    result = result.mid(1, result.size() - 2);
+    // Qt writes 2.0 as 2; the original Python plugin checks persisted float types strictly.
+    static const QSet<QString> floatPaths {
+        "/strength", "/resolution_multiplier", "/upscale/factor", "/upscale/strength",
+        "/upscale/unblur_strength", "/live/strength", "/background/threshold",
+        "/control/[]/start", "/control/[]/end",
+        "/regions/[]/control/[]/start", "/regions/[]/control/[]/end"
+    };
+    if (value.isDouble() && floatPaths.contains(path)
+        && !result.contains('.') && !result.contains('e') && !result.contains('E'))
+        result += ".0";
+    return result;
+}
 QByteArray digest(const QByteArray& data) {
     return QCryptographicHash::hash(data, QCryptographicHash::Sha256).toHex();
 }
@@ -96,6 +128,29 @@ bool HistoryStore::load(const Read& read) {
     return true;
 }
 QJsonArray HistoryStore::entries() const { return m_state["history"].toArray(); }
+void HistoryStore::setDocumentSettings(const QJsonObject& settings) {
+    m_state["strength"] = settings["strength"];
+    m_state["resolution_multiplier"] = settings["resolution"];
+    m_state["batch_count"] = settings["batch"];
+    m_state["edit_mode"] = settings["mode"] == "edit";
+    const auto banks = settings["prompt_banks"].toObject();
+    for (const auto& mode : {QString("generate"), QString("edit")}) {
+        auto bank = banks[mode].toObject();
+        if (bank.isEmpty() && ((settings["mode"] == "edit") != (mode == "edit"))) continue;
+        if (bank.isEmpty()) bank = settings;
+        const auto key = mode == "edit" ? "edit" : "root";
+        auto root = m_state[key].toObject();
+        root["positive"] = bank["prompt"].toString();
+        root["negative"] = bank["negative"].toString();
+        m_state[key] = root;
+    }
+    auto upscale = m_state["upscale"].toObject();
+    const auto options = settings["upscale_options"].toObject();
+    for (const auto& key : {"factor", "strength", "unblur_strength", "use_diffusion", "use_prompt"})
+        if (options.contains(key)) upscale[key] = options[key];
+    if (options.contains("model")) upscale["upscaler"] = options["model"];
+    m_state["upscale"] = upscale;
+}
 QRect HistoryStore::bounds(const QJsonObject& entry) {
     const auto data = entry["params"].toObject()["bounds"].toArray();
     return data.size() == 4 ? QRect(data[0].toInt(), data[1].toInt(), data[2].toInt(), data[3].toInt())
@@ -283,10 +338,11 @@ void HistoryStore::clear() {
 }
 void HistoryStore::saveAsync(QObject* owner, const Write& write, std::function<void(QString)> done) {
     m_state["version"] = 1;
-    m_bases.insert(digest(QJsonDocument(m_state).toJson(QJsonDocument::Compact)));
+    const auto bytes = pluginJson(m_state);
+    m_bases.insert(digest(bytes));
     if (write) {
         for (auto it = m_images.begin(); it != m_images.end(); ++it) write(imageKey(it.key()), it.value());
-        write("ai_diffusion/ui.json", QJsonDocument(m_state).toJson(QJsonDocument::Compact));
+        write("ai_diffusion/ui.json", bytes);
         for (auto slot : m_removedSlots) {
             write(imageKey(slot), {});
             write(QString("ai_diffusion/result%1").arg(slot), {});
@@ -345,7 +401,7 @@ HistoryStore::Prepared HistoryStore::prepare(const QList<QImage>& images,
 bool HistoryStore::save(const Write& write) {
     m_error.clear();
     m_state["version"] = 1;
-    const auto bytes = QJsonDocument(m_state).toJson(QJsonDocument::Compact);
+    const auto bytes = pluginJson(m_state);
     m_bases.insert(digest(bytes));
     if (write) {
         for (auto it = m_images.begin(); it != m_images.end(); ++it)

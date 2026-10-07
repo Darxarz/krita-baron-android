@@ -41,6 +41,7 @@ public:
     bool remove(const QString& id, int index);
     void clear();
     QJsonArray entries() const;
+    void setDocumentSettings(const QJsonObject& settings);
     QString error() const { return m_error; }
     static QString imageKey(int slot);
     static QRect bounds(const QJsonObject& entry);

@@ -1,6 +1,6 @@
 --- a/libs/ui/kis_selection_actions_panel.cpp
 +++ b/libs/ui/kis_selection_actions_panel.cpp
-@@ -53,6 +53,7 @@
+@@ -59,6 +59,7 @@
  
      using TargetSlot = void (KisSelectionManager::*)();
      TargetSlot slot;
@@ -8,17 +8,17 @@
  };
  
  struct KisSelectionActionsPanel::Private {
-@@ -85,6 +86,7 @@
+@@ -92,6 +93,7 @@
              {"krita_tool_color_fill", i18n("Fill Selection with Color"), &KisSelectionManager::fillForegroundColor},
              {"draw-eraser", i18n("Clear Selection"), &KisSelectionManager::clear},
              {"duplicatelayer", i18n("Copy To New Layer"), &KisSelectionManager::copySelectionToNewLayer},
 +            {"select-all", i18n("Feather Selection…"), nullptr, "featherselection"},
-             {"tool_crop", i18n("Crop to Selection"), &KisSelectionManager::imageResizeToSelection}};
+             {"tool_crop", i18n("Crop to Selection"), &KisSelectionManager::imageResizeToSelection},
+             {"krita_tool_reference_images", i18n("Toggle pin selection actions bar"), &KisSelectionManager::toggleSAPpin}};
          return data;
-     }
-@@ -104,7 +106,29 @@
-     // Setup buttons...
-     for (const ActionButtonData &buttonData : Private::buttonData()) {
+@@ -136,7 +138,29 @@
+     for (int i = 0; i  < data.length(); i++) {
+         const ActionButtonData &buttonData = data[i];
          KisSelectionActionsPanelButton *button = new KisSelectionActionsPanelButton(buttonData.iconName, buttonData.tooltip, BUTTON_SIZE, viewManager->canvas());
 -        connect(button, &QAbstractButton::clicked, d->m_selectionManager, buttonData.slot);
 +        if (buttonData.slot) {
@@ -46,8 +46,8 @@
 +        }
          connect(button, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(showContextMenu(QPoint)));
          d->m_buttons.append(button);
-     }
-@@ -447,6 +471,10 @@
+ 
+@@ -811,6 +835,10 @@
  void KisSelectionActionsPanel::showContextMenu(const QPoint &pos)
  {
      QMenu menu = QMenu();

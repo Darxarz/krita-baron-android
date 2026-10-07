@@ -1,10 +1,12 @@
 <p align="center"><img src="docs/images/baron-hero.svg" alt="Krita Baron Edition" width="100%"></p>
 
 <p align="center">
-<a href="https://github.com/Darxarz/krita-baron-android/releases/tag/v0.1.35"><img alt="Android 0.1.35" src="https://img.shields.io/badge/Android-0.1.35-9abcf5?style=flat-square"></a>
-<a href="https://github.com/Darxarz/krita-ai-diffusion-baron-edition"><img alt="Desktop 1.53.0-baron.14" src="https://img.shields.io/badge/Desktop-1.53.0--baron.14-bda3ef?style=flat-square"></a>
+<a href="https://github.com/Darxarz/krita-baron-android/releases/tag/v0.1.36"><img alt="Android 0.1.36" src="https://img.shields.io/badge/Android-0.1.36-9abcf5?style=flat-square"></a>
+<a href="https://github.com/Darxarz/krita-ai-diffusion-baron-edition"><img alt="Desktop 1.53.0-baron.15" src="https://img.shields.io/badge/Desktop-1.53.0--baron.15-bda3ef?style=flat-square"></a>
 <a href="LICENSE"><img alt="GPL v3" src="https://img.shields.io/badge/License-GPL--3.0-91b9ac?style=flat-square"></a>
 </p>
+
+<p align="center"><img src="assets/branding/baron-goat-v1.png" alt="Baron goat chewing a paintbrush" width="128"></p>
 
 # Krita Baron Edition
 
@@ -13,18 +15,18 @@ of [Acly's Krita AI Diffusion](https://github.com/Acly/krita-ai-diffusion), with
 companion desktop fork. The Android panel runs inside Krita without a Python
 interpreter; inference runs on a remote backend.
 
-[Русский](README.ru.md) · [Downloads](https://github.com/Darxarz/krita-baron-android/releases/tag/v0.1.35)
+[Русский](README.ru.md) · [Downloads](https://github.com/Darxarz/krita-baron-android/releases/tag/v0.1.36)
 · [What is still missing?](docs/CURRENT_PARITY.md) · [Build from source](docs/BUILD.md)
 
 ## Download
 
 | Platform | Package | Installation |
 | --- | --- | --- |
-| Android 7+ · ARM64 | **[Krita Baron Edition 0.1.35 APK](https://github.com/Darxarz/krita-baron-android/releases/download/v0.1.35/krita-baron-android-arm64-v0.1.35.apk)** | Install the APK; the AI panel is built in. |
-| Windows · Krita 5.x / Qt5 | **[AI Diffusion Baron 1.53.0-baron.14 ZIP](https://github.com/Darxarz/krita-baron-android/releases/download/v0.1.35/krita_ai_diffusion-1.53.0-baron.14.zip)** | Import it as a Python plugin, then restart Krita. |
-| Complete modified source | [Krita + native port + public fonts](https://github.com/Darxarz/krita-baron-android/releases/download/v0.1.35/krita-baron-edition-v0.1.35-source.zip) | Corresponding source for the Android APK. |
+| Android 7+ · ARM64 | **[Krita Baron Edition 0.1.36 APK](https://github.com/Darxarz/krita-baron-android/releases/download/v0.1.36/krita-baron-android-arm64-v0.1.36.apk)** | Install the APK; the AI panel is built in. |
+| Windows · Krita 5.x / Qt5 | **[AI Diffusion Baron 1.53.0-baron.15 ZIP](https://github.com/Darxarz/krita-baron-android/releases/download/v0.1.36/krita_ai_diffusion-1.53.0-baron.15.zip)** | Import it as a Python plugin, then restart Krita. |
+| Complete modified source | [Krita + native port + public fonts](https://github.com/Darxarz/krita-baron-android/releases/download/v0.1.36/krita-baron-edition-v0.1.36-source.zip) | Corresponding source for the Android APK. |
 
-The Android edition is a **preview build** based on a Krita 5.4 development snapshot.
+The Android edition is a **preview port** based on stable **Krita 5.3.4 / Qt5**.
 It has its own application identity and can coexist with official Krita. Current
 packages include 96 licensed public font families; private Windows fonts are not
 included. Release assets include SHA-256 checksums.
@@ -75,10 +77,10 @@ model support and native-API configuration determine which features can run.
 | Build and packaging | [`scripts/`](scripts/) · [build guide](docs/BUILD.md) |
 | Regression tests | [`tests/`](tests/) |
 
-The v0.1.35 automated checks passed 124 Qt tests on each of Windows and Linux,
+The v0.1.36 automated checks passed 124 Qt tests on Linux,
 25 Python engine/bridge tests and 32 context-geometry cases against the original
 Python functions. These checks do not substitute for tablet and real-inference
-validation. [Release notes](docs/RELEASE_0_1_35.md).
+validation. [Release notes](docs/RELEASE_0_1_36.md).
 
 Bug reports and contributions are welcome: [issues](https://github.com/Darxarz/krita-baron-android/issues),
 [contributing](CONTRIBUTING.md), [desktop fork](https://github.com/Darxarz/krita-ai-diffusion-baron-edition).

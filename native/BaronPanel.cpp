@@ -2418,6 +2418,7 @@ void BaronPanel::flushDocumentState() {
     }
     BaronDiagnostics::record("document-save.begin");
     m_host->saveDocumentState(data);
+    if (auto store = history(m_host->documentId())) store->setDocumentSettings(data);
     BaronDiagnostics::record("document-save.end");
     BaronDiagnostics::record("history-save.begin");
     persistHistory();

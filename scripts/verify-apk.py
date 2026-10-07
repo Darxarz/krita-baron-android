@@ -25,6 +25,11 @@ with ZipFile(path) as archive:
     )
     if release["version"].encode("utf-16le") not in binary:
         raise SystemExit("Native UI version does not match the release metadata")
+    if b"/upscale/factor" not in binary and "/upscale/factor".encode("utf-16le") not in binary:
+        raise SystemExit("Missing Python-compatible decimal history serialization")
+    version_module = next(name for name in files if name.endswith("libkritaversion_arm64-v8a.so"))
+    if release["krita_version"].encode("utf-16le") not in archive.read(version_module):
+        raise SystemExit("APK Krita base does not match the stable release metadata")
     for text in (
         b"Open full-screen model gallery",
         b"Retrieve the existing result",
@@ -113,6 +118,21 @@ with ZipFile(path) as archive:
         if not any(name.endswith("/" + dependency) for name in files):
             raise SystemExit("Required Android dependency is missing: " + dependency)
     from PyQt5.QtCore import QFile, QResource
+    from PyQt5.QtGui import QImage
+
+    launcher = next(
+        name
+        for name in files
+        if name.startswith("res/mipmap-xxxhdpi") and name.endswith("/ic_launcher.png")
+    )
+    expected_icon = QImage(
+        str(Path(__file__).resolve().parents[1] / "android/branding/mipmap-xxxhdpi.png")
+    )
+    packaged_icon = QImage.fromData(archive.read(launcher))
+    if expected_icon.isNull() or expected_icon != packaged_icon:
+        raise SystemExit("APK launcher icon does not match the Baron goat artwork")
+    if not any("ic_launcher_foreground" in name and name.endswith(".png") for name in files):
+        raise SystemExit("Adaptive goat launcher foreground is missing")
 
     with tempfile.TemporaryDirectory() as temporary:
         resource = Path(temporary) / "qml.rcc"
@@ -163,6 +183,9 @@ report = {
     "orientation_layouts_packaged": True,
     "android_plain_text_clipboard_helper_packaged": True,
     "native_ui_version": release["version"],
+    "krita_base_version": release["krita_version"],
+    "krita_base_revision": release["krita_revision"],
+    "baron_goat_launcher_verified": True,
     "android_exit_history_report_packaged": True,
     "android_anr_thread_report_packaged": True,
     "personal_fonts": personal_fonts,
