@@ -222,6 +222,9 @@ class WorkflowInput:
     nsfw_filter: float = 0.0
     custom_workflow: CustomWorkflowInput | None = None
     background_removal: BackgroundRemovalInput | None = None
+    prompt_mode: str = "comfy"
+    a1111_gpu_noise: bool = False
+    a1111_ensd: int = 0
 
     @property
     def extent(self):

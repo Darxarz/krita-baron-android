@@ -1,0 +1,13 @@
+<RCC>
+<qresource prefix="/baron/prompt">
+<file alias="logic.js">prompt/logic.js</file><file alias="messages.json">prompt/messages.json</file>
+</qresource>
+<qresource prefix="/baron/icons">
+<file alias="prompt-grip-dark.svg">prompt/grip-dark.svg</file>
+<file alias="prompt-grip-light.svg">prompt/grip-light.svg</file>
+<file alias="prompt-paste-dark.svg">prompt/paste-dark.svg</file>
+<file alias="prompt-paste-light.svg">prompt/paste-light.svg</file>
+<file alias="prompt-collapse-dark.svg">prompt/collapse-dark.svg</file>
+<file alias="prompt-collapse-light.svg">prompt/collapse-light.svg</file>
+</qresource>
+</RCC>

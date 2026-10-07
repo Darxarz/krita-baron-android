@@ -1,0 +1,14 @@
+--- a/krita/main.cc
++++ b/krita/main.cc
+@@ -716,9 +716,9 @@
+     /// Initialize application info, it will be used by both, Qt and
+     /// DrKonqi of the host system
+     KAboutData aboutData("krita",
+-                            i18n("Krita"),
++                            QStringLiteral("Krita Baron Edition"),
+                             KritaVersionWrapper::versionString(true),
+-                            i18n("Krita is the full-featured digital art studio"),
++                            i18n("Unofficial modified build of Krita with Baron integration"),
+                             KAboutLicense::GPL,
+                             i18nc("@info:credit", "© 1999–2026 The Krita Developers"));
+     aboutData.setHomepage(QStringLiteral("https://krita.org"));

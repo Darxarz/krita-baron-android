@@ -115,6 +115,23 @@ class StyleSettings:
         ),
     )
 
+    prompt_mode = Setting(
+        _("Prompt syntax"),
+        "comfy",
+        _(
+            "A1111 weights, BREAK, AND and prompt schedules. Requires smZ nodes on the server; SD 1.5 and SDXL only."
+        ),
+    )
+    a1111_gpu_noise = Setting(
+        _("A1111 seeds (GPU noise)"),
+        False,
+        _(
+            "Use the website's A1111 GPU noise settings. Requires A1111 prompt syntax and smZ Settings."
+        ),
+    )
+    a1111_ensd = Setting(
+        _("ENSD"), 0, _("Extra noise seed delta. Keep 0 unless matching an A1111 preset.")
+    )
     sampler = Setting(_("Sampler"), "Default - DPM++ 2M", _("The sampling strategy and scheduler"))
 
     sampler_steps = Setting(
@@ -154,6 +171,9 @@ class Style(QObject):
     krea2_ref_boost: float = StyleSettings.krea2_ref_boost.default
     krea2_grounding_px: int = StyleSettings.krea2_grounding_px.default
     sampler: str = StyleSettings.sampler.default
+    prompt_mode: str = StyleSettings.prompt_mode.default
+    a1111_gpu_noise: bool = StyleSettings.a1111_gpu_noise.default
+    a1111_ensd: int = StyleSettings.a1111_ensd.default
     sampler_steps: int = StyleSettings.sampler_steps.default
     cfg_scale: float = StyleSettings.cfg_scale.default
     live_sampler: str = StyleSettings.live_sampler.default

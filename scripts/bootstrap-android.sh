@@ -9,8 +9,12 @@ if [[ ! -d "$baron_root/krita/.git" ]]; then
     git -C "$baron_root/krita" checkout --detach FETCH_HEAD
 fi
 if [[ ! -d "$baron_root/krita/krita-deps-management/.git" ]]; then
-    git clone --depth 1 https://invent.kde.org/packaging/krita-deps-management.git "$baron_root/krita/krita-deps-management"
-    git clone --depth 1 https://invent.kde.org/packaging/krita-ci-utilities.git "$baron_root/krita/krita-deps-management/ci-utilities"
+    git init "$baron_root/krita/krita-deps-management"
+    git -C "$baron_root/krita/krita-deps-management" fetch --depth 1 https://invent.kde.org/packaging/krita-deps-management.git 7eab9569cb65fe8422224fc1de644a169fd8b0f4
+    git -C "$baron_root/krita/krita-deps-management" checkout --detach FETCH_HEAD
+    git init "$baron_root/krita/krita-deps-management/ci-utilities"
+    git -C "$baron_root/krita/krita-deps-management/ci-utilities" fetch --depth 1 https://invent.kde.org/packaging/krita-ci-utilities.git ed9f250c4de8382b8f8352739c88be75342f0bf8
+    git -C "$baron_root/krita/krita-deps-management/ci-utilities" checkout --detach FETCH_HEAD
 fi
 python3 -m venv "$baron_root/venv"
 "$baron_root/venv/bin/pip" install -q -r "$baron_root/krita/krita-deps-management/requirements.txt"

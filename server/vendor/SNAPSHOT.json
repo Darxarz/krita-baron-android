@@ -1,5 +1,5 @@
 {
-  "edition": "1.53.0-baron.3",
+  "edition": "1.53.0-baron.14",
   "files": {
     "ai_diffusion/document.py": "ced9fd8caa2a902a1d69d68628921b31b30c1d4eda719b52a485b823543c86bc",
     "ai_diffusion/eventloop.py": "f8eede32419d92054eedcc0bbcdef21c897cb3f30fffce371f0a3a4bed88c69e",
@@ -12,23 +12,23 @@
     "ai_diffusion/platform_tools.py": "392e8213e908ec3da031e4303d321ab58a9fee3a0e118bff002ba101bb21ac39",
     "ai_diffusion/pose.py": "e7d2e69f4a7f81fcbe7f40ce33238ec49e8a0ecd09207dfd7e10ad22ee960d7c",
     "ai_diffusion/settings.py": "897f049317fcbe1080d6be12608d0ef5cbfba8984f3449e8d8a87ec7dd14a948",
-    "ai_diffusion/style.py": "235ce6854949b438e298592cc9b2f476d3155eb240b4707b895808e17660c973",
+    "ai_diffusion/style.py": "db922e71842fc6d3d7a21be0fd2855d18d5cb57c8391134e64e763ac51ae74dd",
     "ai_diffusion/text.py": "56890ddf71b48f433b7829f31415b21eba4b8d7e0eaaf03c4e7b6c761e47755c",
     "ai_diffusion/util.py": "6259aa6dd8b86bbdfe9e7cf71fef25353572c2febd505fbcc52f09feb78a5d39",
     "ai_diffusion/win32.py": "190b20f79d457bd2dcdc98f5eb3dea3b726f0cde71250b9f79aae6de40bdcc89",
     "ai_diffusion/__init__.py": "2312dbb1a1fe91b55cb9428ab1a83799a144ef0241061e7f32277a67ee75d2f0",
-    "ai_diffusion/backend/api.py": "1e4f73eceeec69ed9e2a8944f2cc27aba56d56025b0cdf0e6212ed6a783f884c",
+    "ai_diffusion/backend/api.py": "eab89c5fb3e8589c047029d9f5abc6349a81dc7d6b244f143e7b18988a2eace2",
     "ai_diffusion/backend/background.py": "8af528d1168960b76a3038137f756132cb9f122ad0d5cbd6abe8e1ddeb4e0c6d",
     "ai_diffusion/backend/client.py": "1c734a026068dcab89bd56ab3f7c4cd0fead85b2ef98d134623890aab0fcd4b3",
     "ai_diffusion/backend/cloud_client.py": "4bd9c1bae9bdde8f32cd642eb85260897370411737a6c486256fa989bf255701",
     "ai_diffusion/backend/comfy_client.py": "01402bb174312ee5f93c2f6f030df2d7b24f693cc9ecaad05188ebd8c64e07d5",
-    "ai_diffusion/backend/comfy_workflow.py": "7284d1d49faf356ecc19d2c754911ab1b3e54b9f22a57b34a0ed025356fc19d9",
+    "ai_diffusion/backend/comfy_workflow.py": "058d9bff05de4d38e57a44963e607967bf9bba22b35721f71fe5c70c2ca6e057",
     "ai_diffusion/backend/network.py": "fbd29b08434c3d03928a580c7735f1c3e1851c41ccfa942229b0f856b0eeac0f",
     "ai_diffusion/backend/orchestrion_client.py": "51bb7b82d5307deb44ce782c1c6c5837cfee7b82310eca42f3d815759082a2b3",
     "ai_diffusion/backend/resolution.py": "96e127c8aadd91f66fd99a110e4fe50c3cf81b89d2019e3811cf128393292122",
     "ai_diffusion/backend/resources.py": "814d2dcac4ee4369754ad121955c9b3fc3392408e58294ca5db1e16d0634667d",
     "ai_diffusion/backend/server.py": "0d8db6261e8e6bf2a33f7f5807c85bb9f414b7abf151fa54361a26a2f82b7d35",
-    "ai_diffusion/backend/workflow.py": "d1bb428af5633d197a5f72849e4d60540b58f28c8b82e2629020d77913255ed4",
+    "ai_diffusion/backend/workflow.py": "351cac499afd745b41afb6c2e82d7930cf621eb1a78ac3fe200bd86bd5720776",
     "ai_diffusion/backend/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "ai_diffusion/language/en.json": "de7ac7f50a18f81b6b493e241eef42403282c911cdb52fe0539da219b3f1fbc5",
     "ai_diffusion/language/es-ca.json": "8295237b2fe58cb512d372336b6933863ade2463a1feb5105bbb51e2bc6a2276",
@@ -428,6 +428,7 @@
     "ai_diffusion/websockets/.github/workflows/tests.yml": "32510c818420b28d8c03f2af064b2f7748b8c28fb905d722b5c57286c59c6e6f",
     "tests/mock/client.py": "d947cf18f16e014862316027e78bd27f6c97f928f1698dc81c3e729ce0cc3627",
     "tests/mock/krita.py": "2982986cacce9528ca4c18e9037768dcb8ccd2798b95054ebd6621c99f2cfcb2",
-    "tests/mock/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    "tests/mock/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "ai_diffusion/backend/a1111.py": "f3d3158f709570e75ff3cdb8e1ad0faad8fbcf5dacc0e9a7b5f72b36fc0f391d"
   }
 }

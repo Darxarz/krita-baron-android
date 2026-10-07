@@ -1,0 +1,6 @@
+<RCC><qresource prefix="/baron/tags">
+<file alias="Danbooru.csv">tags/Danbooru.csv</file>
+<file alias="Danbooru NSFW.csv">tags/Danbooru NSFW.csv</file>
+<file alias="e621.csv">tags/e621.csv</file>
+<file alias="e621 NSFW.csv">tags/e621 NSFW.csv</file>
+</qresource></RCC>

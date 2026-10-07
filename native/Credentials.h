@@ -5,5 +5,5 @@
 namespace BaronCredentials {
 QByteArray load(const QUrl& root);
 bool save(const QUrl& root, const QByteArray& token);
-void clear();
+void clear(const QUrl& root = {});
 }

@@ -47,3 +47,4 @@ cmake = source / "plugins/dockers/CMakeLists.txt"
 with cmake.open("a", encoding="utf-8") as file:
     file.write("\nadd_subdirectory(baron)\n")
 print("Native Baron docker installed in isolated Krita source tree")
+subprocess.run([sys.executable, str(ROOT / "scripts/refresh-overlay.py"), str(source)], check=True)

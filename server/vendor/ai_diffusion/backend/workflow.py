@@ -20,6 +20,7 @@ from ..text import (
 )
 from ..util import ensure, median_or_zero, unique
 from . import background, resolution, resources
+from .a1111 import apply_prompt_mode, validate_prompt_mode
 from .api import (
     CheckpointInput,
     ConditioningInput,
@@ -983,14 +984,14 @@ def scale(
     if mode is ScaleMode.none:
         return image
     elif mode is ScaleMode.resize:
-        return w.scale_image(image, target)
+        return w.scale_image(image, target, preserve_alpha=models.arch.supports_alpha)
     else:
         assert mode is ScaleMode.upscale_fast
         ratio = target.pixel_count / extent.pixel_count
         factor = max(2, min(4, math.ceil(math.sqrt(ratio))))
         upscale_model = w.load_upscale_model(models.upscale[UpscalerName.fast_x(factor)])
-        image = w.upscale_image(upscale_model, image)
-        return w.scale_image(image, target)
+        image = w.upscale_image(upscale_model, image, preserve_alpha=models.arch.supports_alpha)
+        return w.scale_image(image, target, preserve_alpha=models.arch.supports_alpha)
 
 
 def scale_to_initial(
@@ -1042,8 +1043,8 @@ def scale_refine_and_decode(
 
     upscale_model = w.load_upscale_model(upscaler)
     decoded = vae_decode(w, vae, latent, tiled_vae)
-    upscale = w.upscale_image(upscale_model, decoded)
-    upscale = w.scale_image(upscale, extent.desired)
+    upscale = w.upscale_image(upscale_model, decoded, preserve_alpha=arch.supports_alpha)
+    upscale = w.scale_image(upscale, extent.desired, preserve_alpha=arch.supports_alpha)
     params = _sampler_params(sampling, extent.desired, strength=0.4)
 
     prompt, new_latent = encode_prompt(w, cond, clip, vae, regions, upscale, tiled_vae)
@@ -1305,8 +1306,10 @@ def inpaint(
         upscale = vae_decode(w, vae, out_latent, checkpoint.tiled_vae)
         upscale = w.crop_image(upscale, initial_bounds)
         upscale = ensure_minimum_extent(w, upscale, initial_bounds.extent, 32)
-        upscale = w.upscale_image(upscale_model, upscale)
-        upscale = w.scale_image(upscale, upscale_extent.desired)
+        upscale = w.upscale_image(upscale_model, upscale, preserve_alpha=models.arch.supports_alpha)
+        upscale = w.scale_image(
+            upscale, upscale_extent.desired, preserve_alpha=models.arch.supports_alpha
+        )
         latent = vae_encode(w, vae, upscale, checkpoint.tiled_vae)
         latent = w.set_latent_noise_mask(latent, upscale_mask)
 
@@ -1328,7 +1331,13 @@ def inpaint(
         )
         out_image = vae_decode(w, vae, out_latent, checkpoint.tiled_vae)
         input_cropped = w.crop_image(in_image, initial_bounds)
-        out_image = w.color_match(out_image, input_cropped, upscale_mask, misc.color_match)
+        out_image = w.color_match(
+            out_image,
+            input_cropped,
+            upscale_mask,
+            misc.color_match,
+            preserve_alpha=models.arch.supports_alpha,
+        )
         out_image = scale_to_target(upscale_extent, w, out_image, models)
     else:
         desired_bounds = extent.convert(target_bounds, "target", "desired")
@@ -1337,7 +1346,13 @@ def inpaint(
             desired_extent, desired_extent, desired_extent, target_bounds.extent
         )
         out_image = vae_decode(w, vae, out_latent, checkpoint.tiled_vae)
-        out_image = w.color_match(out_image, in_image, inpaint_mask, misc.color_match)
+        out_image = w.color_match(
+            out_image,
+            in_image,
+            inpaint_mask,
+            misc.color_match,
+            preserve_alpha=models.arch.supports_alpha,
+        )
         out_image = scale(
             extent.initial, extent.desired, extent.refinement_scaling, w, out_image, models
         )
@@ -1346,7 +1361,9 @@ def inpaint(
 
     out_image = w.nsfw_filter(out_image, sensitivity=misc.nsfw_filter)
     compositing_mask = denoise_to_compositing_mask(w, cropped_mask, params)
-    out_masked = w.apply_mask(out_image, compositing_mask)
+    out_masked = w.apply_mask(
+        out_image, compositing_mask, preserve_alpha=models.arch.supports_alpha
+    )
     w.send_image(out_masked)
     return w
 
@@ -1446,14 +1463,22 @@ def refine_region(
     out_image = scale_refine_and_decode(
         extent, w, cond, sampling, out_latent, model_orig, clip, vae, models, checkpoint.tiled_vae
     )
-    out_image = w.color_match(out_image, in_image, initial_mask, misc.color_match)
+    out_image = w.color_match(
+        out_image,
+        in_image,
+        initial_mask,
+        misc.color_match,
+        preserve_alpha=models.arch.supports_alpha,
+    )
     out_image = w.nsfw_filter(out_image, sensitivity=misc.nsfw_filter)
     out_image = scale_to_target(extent, w, out_image, models)
     if extent.target != inpaint.target_bounds.extent:
         out_image = w.crop_image(out_image, inpaint.target_bounds)
         in_mask = w.crop_mask(in_mask, inpaint.target_bounds)
     compositing_mask = denoise_to_compositing_mask(w, in_mask, inpaint)
-    out_masked = w.apply_mask(out_image, compositing_mask)
+    out_masked = w.apply_mask(
+        out_image, compositing_mask, preserve_alpha=models.arch.supports_alpha
+    )
     w.send_image(out_masked)
     return w
 
@@ -1877,6 +1902,11 @@ def prepare(
     i.models.dynamic_caching = perf.dynamic_caching
     i.models.tiled_vae = perf.tiled_vae
     arch = i.models.version = resolve_arch(style, models)
+    if arch is Arch.sd15 or arch.is_sdxl_like:
+        i.prompt_mode = style.prompt_mode
+        i.a1111_gpu_noise = style.a1111_gpu_noise and i.prompt_mode == "a1111"
+        i.a1111_ensd = style.a1111_ensd
+    validate_prompt_mode(i, models.node_inputs)
     qwen_edit = arch is Arch.qwen2 and cond.edit_reference
     krea_edit = _prepare_krea_edit(i.models, cond, models)
     instruction_edit = qwen_edit or krea_edit
@@ -2001,11 +2031,21 @@ def prepare_create_control_image(
 
 
 def create(i: WorkflowInput, models: ClientModels, comfy_mode=ComfyRunMode.server) -> ComfyWorkflow:
+    validate_prompt_mode(i, models.node_inputs)
+    result = _create(i, models, comfy_mode)
+    apply_prompt_mode(result, i)
+    return result
+
+
+def _create(
+    i: WorkflowInput, models: ClientModels, comfy_mode=ComfyRunMode.server
+) -> ComfyWorkflow:
     """
     Takes a WorkflowInput object and creates the corresponding ComfyUI workflow prompt.
     This should be a pure function, the workflow is entirely defined by the input.
     """
     workflow = ComfyWorkflow(models.node_inputs, comfy_mode)
+    workflow.a1111_mode = i.prompt_mode == "a1111"
     if i.kind is WorkflowKind.remove_background:
         return background.create(workflow, i.image, ensure(i.background_removal))
     if i.models and i.models.version is Arch.krea2 and i.conditioning:

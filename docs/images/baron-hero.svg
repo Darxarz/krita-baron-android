@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="340" viewBox="0 0 1200 340" role="img" aria-label="Krita Baron Edition: AI tools for your canvas">
+<defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#111827"/><stop offset="1" stop-color="#221b36"/></linearGradient><linearGradient id="accent"><stop stop-color="#8ecbff"/><stop offset="1" stop-color="#c5a8ff"/></linearGradient></defs>
+<rect width="1200" height="340" rx="24" fill="url(#bg)"/>
+<circle cx="1080" cy="35" r="180" fill="#af8be8" opacity=".055"/><circle cx="870" cy="365" r="190" fill="#56bdf7" opacity=".06"/>
+<rect x="48" y="46" width="56" height="56" rx="17" fill="#b8a4ef" fill-opacity=".12" stroke="#7d719e"/>
+<path d="M64 82l10-23 18 18-23 10zM73 71l10 10" fill="none" stroke="url(#accent)" stroke-width="3" stroke-linejoin="round"/>
+<text x="48" y="164" font-family="Segoe UI,Arial,sans-serif" font-size="47" font-weight="700" fill="#f5f2ff">Krita Baron Edition</text>
+<text x="50" y="207" font-family="Segoe UI,Arial,sans-serif" font-size="23" fill="#bfc2d7">AI tools for the canvas you already know.</text>
+<text x="50" y="281" font-family="Segoe UI,Arial,sans-serif" font-size="16" letter-spacing="2" fill="#a6caf2">ANDROID NATIVE PORT  /  DESKTOP PLUGIN</text>
+<rect x="775" y="49" width="368" height="242" rx="16" fill="#0d111c" stroke="#5b5374" stroke-width="2"/>
+<rect x="788" y="64" width="340" height="22" rx="6" fill="#282438"/><circle cx="801" cy="75" r="3" fill="#a8caff"/><path d="M812 75h100" stroke="#827f9a" stroke-width="4" stroke-linecap="round"/>
+<rect x="789" y="98" width="208" height="177" rx="7" fill="#232735"/>
+<path d="M792 232l49-80 40 44 33-62 79 127H792z" fill="#4c5278"/><circle cx="955" cy="133" r="17" fill="#e3c4ac"/>
+<path d="M839 227c30-47 61-34 89-12" fill="none" stroke="#aec9ff" stroke-width="4" stroke-linecap="round"/>
+<rect x="1008" y="98" width="120" height="54" rx="6" fill="#2b273b"/>
+<path d="M1018 110h86m-86 12h72m-72 12h93" stroke="#79748e" stroke-width="3" stroke-linecap="round"/>
+<path d="M1012 163h110" stroke="#504661" stroke-width="4" stroke-linecap="round"/><path d="M1012 163h66" stroke="#9bbffa" stroke-width="4" stroke-linecap="round"/>
+<rect x="1009" y="177" width="119" height="24" rx="5" fill="#665a91"/>
+<rect x="1009" y="215" width="34" height="37" rx="4" fill="#4d506e"/><rect x="1051" y="215" width="34" height="37" rx="4" fill="#635575"/><rect x="1093" y="215" width="34" height="37" rx="4" fill="#4a6679"/>
+</svg>

@@ -11,6 +11,7 @@ export KDECI_ANDROID_NDK_ROOT="$baron_root/android/android-ndk-r27d"
 export KDECI_ANDROID_ABI=arm64-v8a
 export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
 export PATH="$JAVA_HOME/bin:$ANDROID_HOME/platform-tools:$PATH"
+bash "$baron_repo/scripts/install-qtwebsockets.sh"
 python3 "$baron_repo/scripts/refresh-overlay.py" "$baron_root/krita"
 cmake -S . -B _build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$baron_root/krita/_install" \
     -DCMAKE_TOOLCHAIN_FILE="$baron_root/krita/krita-deps-management/tools/android-toolchain-krita.cmake" \
@@ -23,4 +24,5 @@ export KDECI_WORKDIR_PATH="$baron_root"
 export KDECI_SHARED_INSTALL_PATH="$baron_root/krita/_install"
 export KRITA_INSTALL_PREFIX="$baron_root/krita/_install"
 export ANDROID_ABI=arm64-v8a
+python3 "$baron_repo/scripts/prepare-android-qml.py" "$baron_root/krita"
 python3 build-tools/ci-scripts/build-android-package.py

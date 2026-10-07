@@ -1,61 +1,95 @@
-# Krita AI Diffusion — Baron Edition for Android
+<p align="center"><img src="docs/images/baron-hero.svg" alt="Krita Baron Edition" width="100%"></p>
 
-Отдельный проект для Android Krita: нативная панель C++/Qt подключается к
-Оркестриону. Python не встраивается в APK. Сборщик workflow работает на сервере
-и использует зафиксированную копию движка настольного Baron Edition.
+<p align="center">
+<a href="https://github.com/Darxarz/krita-baron-android/releases/tag/v0.1.35"><img alt="Android 0.1.35" src="https://img.shields.io/badge/Android-0.1.35-9abcf5?style=flat-square"></a>
+<a href="https://github.com/Darxarz/krita-ai-diffusion-baron-edition"><img alt="Desktop 1.53.0-baron.14" src="https://img.shields.io/badge/Desktop-1.53.0--baron.14-bda3ef?style=flat-square"></a>
+<a href="LICENSE"><img alt="GPL v3" src="https://img.shields.io/badge/License-GPL--3.0-91b9ac?style=flat-square"></a>
+</p>
 
-## Возможности первой версии
+# Krita Baron Edition
 
-- Вход через браузер с явным подтверждением подключения на сайте.
-- Баланс и оценка стоимости только в bleatbucks / беелетиках.
-- Генерация, редактирование текущего холста и выделения, апскейл,
-  отделение персонажа от фона. Стул по умолчанию считается фоном.
-- Референсы Qwen 2.1 / Krea 2, настройки identity/style и выбор LoRA.
-- Полноэкранная галерея основных моделей и LoRA, поиск по имени,
-  картинки с постепенной загрузкой, настройка силы LoRA.
-- Раскрывающиеся разделы настроек и цвета текущей темы Krita.
-- Результаты добавляются в новые слои; у вырезанного персонажа остаётся
-  редактируемая маска. Исходные слои скрываются с возможностью отмены.
-- Зашифрованное хранение ключа устройства через Android Keystore.
+Paint, generate, edit and refine in the same canvas. A native **C++/Qt Android port**
+of [Acly's Krita AI Diffusion](https://github.com/Acly/krita-ai-diffusion), with a
+companion desktop fork. The Android panel runs inside Krita without a Python
+interpreter; inference runs on a remote backend.
 
-Это первый нативный перенос, а не полная копия всех рабочих пространств
-настольного плагина. Live, Animation, Custom Graph и расширенные ControlNet
-панели пока не перенесены. Русский и английский интерфейс переведены полностью;
-остальные 12 языков используют существующие переводы и английский для новых строк.
+[Русский](README.ru.md) · [Downloads](https://github.com/Darxarz/krita-baron-android/releases/tag/v0.1.35)
+· [What is still missing?](docs/CURRENT_PARITY.md) · [Build from source](docs/BUILD.md)
 
-## Статус
+## Download
 
-Актуальные результаты сборки и проверки находятся в [docs/STATUS.md](docs/STATUS.md).
-Самостоятельная программа `baron_preview` предназначена только для проверки UI:
-это не Krita и не готовый Android APK.
+| Platform | Package | Installation |
+| --- | --- | --- |
+| Android 7+ · ARM64 | **[Krita Baron Edition 0.1.35 APK](https://github.com/Darxarz/krita-baron-android/releases/download/v0.1.35/krita-baron-android-arm64-v0.1.35.apk)** | Install the APK; the AI panel is built in. |
+| Windows · Krita 5.x / Qt5 | **[AI Diffusion Baron 1.53.0-baron.14 ZIP](https://github.com/Darxarz/krita-baron-android/releases/download/v0.1.35/krita_ai_diffusion-1.53.0-baron.14.zip)** | Import it as a Python plugin, then restart Krita. |
+| Complete modified source | [Krita + native port + public fonts](https://github.com/Darxarz/krita-baron-android/releases/download/v0.1.35/krita-baron-edition-v0.1.35-source.zip) | Corresponding source for the Android APK. |
 
-Первый полноценный APK собран отдельно: `krita-baron-android-arm64-v0.1.0-preview.apk`,
-около 173 МиБ, Android 7+ / ARM64. Его подпись и состав проверены; запуск на
-реальном планшете ещё не проверен. Сборка основана на Krita 5.4.0-prealpha.
+The Android edition is a **preview build** based on a Krita 5.4 development snapshot.
+It has its own application identity and can coexist with official Krita. Current
+packages include 96 licensed public font families; private Windows fonts are not
+included. Release assets include SHA-256 checksums.
 
-Ниже — UI-превью нативной панели. Галерея показывает демонстрационные названия
-и заглушки картинок, а не подключение к рабочему сайту.
+## Familiar controls, tablet-friendly interaction
 
-![Native panel, dark theme](docs/images/panel-dark.png)
+- Generate, refine or edit the canvas or a selection, with a denoise slider and
+  automatic document dimensions.
+- Custom inpainting: Seamless, Focus, pre-fill and selection/image/mask-layer context.
+- Control layers and references, server preprocessors, regional prompts and masks.
+- Tiled diffusion upscale and foreground extraction with editable masks.
+- Results below the prompt: tap to preview, tap empty space to compare, apply to a
+  real layer. Touch scrolling has inertia; thumbnails stay in fixed positions.
+- Generation history in documents, desktop-history interoperability and saved styles.
+- Full-screen model/LoRA browser, folders, tags, trigger words, model information
+  and persistent thumbnail caching, where the backend provides metadata.
+- Prompt completion, prompt actions, separate generation/edit prompt and style banks,
+  and optional A1111 prompt syntax/GPU noise on compatible backends.
+- Portrait/landscape dock layouts, theme-aware UI, localization and in-app updates.
 
-![Full-screen model gallery preview](docs/images/gallery.png)
+Core mechanisms are implemented, but this is **not yet a complete port of every
+Python-plugin workspace**. Live, Animation, Custom/Graph and remaining differences
+are documented in the [current parity report](docs/CURRENT_PARITY.md).
 
-Рабочий сайт не изменяется и не перезапускается этим проектом. Для подключения
-нужен серверный маршрут `/api/krita/native/prepare`; подготовленные изменения
-находятся в [orchestrion-integration](orchestrion-integration), в отдельной ветке
-сайта. До их интеграции нативная генерация на рабочем сайте недоступна.
+## Start using it
 
-## Сборка и устройство проекта
+**Android:** install the APK, open the AI Diffusion Baron Edition docker and choose
+Connection. Use a supported remote backend; direct ComfyUI requires the
+[server-side workflow helper](server/comfyui-baron-native/README.md). Models stay on
+the inference machine.
 
-- [Сборка APK](docs/BUILD.md)
-- [Подключение серверной части](docs/SERVER.md)
-- `native/` — Qt UI и HTTP-клиент.
-- `krita/` — адаптер документов, слоёв и масок Krita.
-- `android/` — Android Keystore.
-- `server/` — компиляция workflow без запуска GPU.
-- `server/vendor/SNAPSHOT.json` — SHA-256 исходников движка Baron `.3`.
-- `tests/` — проверки клиента, галереи и workflow на сохранённых метаданных.
+**Desktop:** in Krita, choose **Tools → Scripts → Import Python Plugin from File**,
+select the ZIP and restart. Enable the plugin in **Settings → Configure Krita →
+Python Plugin Manager**, then open its docker. This uses the original `ai_diffusion`
+plugin identifier and replaces an existing installation of that plugin.
 
-Исходники распространяются под GPL-3.0-or-later. Krita, движок Acly/Baron
-и вложенные библиотеки сохраняют собственные уведомления об авторских правах.
-Базовый код Krita скачивается из KDE отдельно; этот репозиторий содержит надстройку.
+ComfyUI, Interstice and compatible custom-server connections are available. Backend
+model support and native-API configuration determine which features can run.
+
+## Project and development
+
+| Area | Location |
+| --- | --- |
+| Native widgets and network clients | [`native/`](native/) |
+| Krita documents, layers, masks and preview | [`krita/`](krita/) |
+| Android integration | [`android/`](android/) |
+| Original workflow engine and adapters | [`server/`](server/) |
+| Build and packaging | [`scripts/`](scripts/) · [build guide](docs/BUILD.md) |
+| Regression tests | [`tests/`](tests/) |
+
+The v0.1.35 automated checks passed 124 Qt tests on each of Windows and Linux,
+25 Python engine/bridge tests and 32 context-geometry cases against the original
+Python functions. These checks do not substitute for tablet and real-inference
+validation. [Release notes](docs/RELEASE_0_1_35.md).
+
+Bug reports and contributions are welcome: [issues](https://github.com/Darxarz/krita-baron-android/issues),
+[contributing](CONTRIBUTING.md), [desktop fork](https://github.com/Darxarz/krita-ai-diffusion-baron-edition).
+
+## Credits and license
+
+**Acly and contributors** created Krita AI Diffusion. **The Krita team and
+contributors** created Krita. **Darxarz / Baron Edition** provides this independent
+Android port and modifications. Original authorship, icons, translations and
+license notices are retained; this edition is not an official Acly or Krita release.
+
+[Original plugin](https://github.com/Acly/krita-ai-diffusion) ·
+[Original handbook](https://docs.interstice.cloud) ·
+[GPL-3.0-or-later](LICENSE) · [Third-party notices](THIRD_PARTY_NOTICES.md)

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "Credentials.h"
+#include <QCryptographicHash>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QSettings>
@@ -8,6 +9,9 @@
 #include <QAndroidJniObject>
 #endif
 namespace {
+QString credentialKey(const QUrl& root) {
+    return QString("encryptedLogin/" + QCryptographicHash::hash(root.toEncoded(), QCryptographicHash::Sha256).toHex());
+}
 QString transform(const QString& method, const QString& value) {
 #ifdef Q_OS_ANDROID
     const auto input = QAndroidJniObject::fromString(value);
@@ -29,7 +33,7 @@ QString transform(const QString& method, const QString& value) {
 }
 QByteArray BaronCredentials::load(const QUrl& root) {
     QSettings settings("BaronEdition", "Orchestrion");
-    const auto raw = transform("unseal", settings.value("encryptedLogin").toString());
+    const auto raw = transform("unseal", settings.value(credentialKey(root), settings.value("encryptedLogin")).toString());
     const auto data = QJsonDocument::fromJson(raw.toUtf8()).object();
     return data["website"].toString() == root.toString() ? data["token"].toString().toUtf8()
                                                          : QByteArray();
@@ -42,10 +46,13 @@ bool BaronCredentials::save(const QUrl& root, const QByteArray& token) {
     if (encrypted.isEmpty())
         return false;
     QSettings settings("BaronEdition", "Orchestrion");
-    settings.setValue("encryptedLogin", encrypted);
+    settings.setValue(credentialKey(root), encrypted);
     return true;
 }
-void BaronCredentials::clear() {
+void BaronCredentials::clear(const QUrl& root) {
     QSettings settings("BaronEdition", "Orchestrion");
-    settings.remove("encryptedLogin");
+    if (root.isEmpty()) { settings.remove("encryptedLogin"); return; }
+    settings.remove(credentialKey(root));
+    const auto legacy = QJsonDocument::fromJson(transform("unseal", settings.value("encryptedLogin").toString()).toUtf8()).object();
+    if (legacy["website"].toString() == root.toString()) settings.setValue("encryptedLogin", QString());
 }

@@ -9,6 +9,8 @@
 #include <QTranslator>
 static void initializeBaronResources() {
     Q_INIT_RESOURCE(translations);
+    Q_INIT_RESOURCE(plugin_icons);
+    Q_INIT_RESOURCE(tags);
 }
 namespace {
 class JsonTranslator : public QTranslator {
@@ -16,7 +18,10 @@ public:
     QJsonObject entries;
     QString translate(const char* context, const char* source, const char*, int) const override {
         const QByteArray name(context);
-        if (name != "BaronPanel" && name != "OrchestrionClient" && name != "BaronDocker")
+        if (name != "BaronPanel" && name != "OrchestrionClient" && name != "BaronDocker"
+            && name != "BaronUpdates" && name != "GuidancePanel" && name != "JobQueue"
+            && name != "ModelCatalog" && name != "InterfaceSettings" && name != "ToggleSwitch"
+            && name != "InpaintWidget" && name != "AuthorCredits" && name != "UpscaleWidget")
             return {};
         return entries.value(QString::fromUtf8(source)).toString();
     }
@@ -28,8 +33,8 @@ void BaronLocalization::install() {
         return;
     initializeBaronResources();
     QSettings settings("BaronEdition", "Orchestrion");
-    auto language
-        = settings.value("language", QLocale().name().replace('_', '-').toLower()).toString();
+    auto language = settings.value("language", "").toString();
+    if (language.isEmpty()) language = QLocale().name().replace('_', '-').toLower();
     QFile file(":/baron/language/" + language + ".json");
     if (!file.exists())
         file.setFileName(":/baron/language/" + language.section('-', 0, 0) + ".json");
