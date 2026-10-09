@@ -2,7 +2,7 @@
 
 <p align="center">
 <a href="https://github.com/Darxarz/krita-baron-android/releases/tag/v0.1.36"><img alt="Android 0.1.36" src="https://img.shields.io/badge/Android-0.1.36-9abcf5?style=flat-square"></a>
-<a href="https://github.com/Darxarz/krita-ai-diffusion-baron-edition"><img alt="Desktop 1.53.0-baron.15" src="https://img.shields.io/badge/Desktop-1.53.0--baron.15-bda3ef?style=flat-square"></a>
+<a href="https://github.com/Darxarz/krita-ai-diffusion-baron-edition"><img alt="Desktop 1.53.0-baron.16" src="https://img.shields.io/badge/Desktop-1.53.0--baron.16-bda3ef?style=flat-square"></a>
 <a href="LICENSE"><img alt="GPL v3" src="https://img.shields.io/badge/License-GPL--3.0-91b9ac?style=flat-square"></a>
 </p>
 
@@ -23,7 +23,7 @@ interpreter; inference runs on a remote backend.
 | Platform | Package | Installation |
 | --- | --- | --- |
 | Android 7+ · ARM64 | **[Krita Baron Edition 0.1.36 APK](https://github.com/Darxarz/krita-baron-android/releases/download/v0.1.36/krita-baron-android-arm64-v0.1.36.apk)** | Install the APK; the AI panel is built in. |
-| Windows · Krita 5.x / Qt5 | **[AI Diffusion Baron 1.53.0-baron.15 ZIP](https://github.com/Darxarz/krita-baron-android/releases/download/v0.1.36/krita_ai_diffusion-1.53.0-baron.15.zip)** | Import it as a Python plugin, then restart Krita. |
+| Windows · Krita 5.x / Qt5 | **[AI Diffusion Baron 1.53.0-baron.16 ZIP](https://github.com/Darxarz/krita-ai-diffusion-baron-edition/releases/download/v1.53.0-baron.16/krita_ai_diffusion-1.53.0-baron.16.zip)** | Import it as a Python plugin, then restart Krita. |
 | Complete modified source | [Krita + native port + public fonts](https://github.com/Darxarz/krita-baron-android/releases/download/v0.1.36/krita-baron-edition-v0.1.36-source.zip) | Corresponding source for the Android APK. |
 
 The Android edition is a **preview port** based on stable **Krita 5.3.4 / Qt5**.
