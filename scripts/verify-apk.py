@@ -34,7 +34,7 @@ with ZipFile(path) as archive:
         b"Open full-screen model gallery",
         b"Retrieve the existing result",
         b"/api/krita/native/prepare",
-        b"/baron-updates/stable.json",
+        b"/baron-updates/stable-ink.json",
         b"prompt_banks",
         b"style_banks",
         b"linked_edit_style",

@@ -70,7 +70,7 @@ public:
     ~PromptEditor() override;
     void setLoraNames(const QStringList& names);
     void setLoraCatalog(const QJsonArray& catalog);
-    void insertLora(const QJsonObject& lora, double strength = 1);
+    void insertLora(const QJsonObject& lora, double strength = 1, bool promptOnly = false);
     void reloadTags();
     void resetInputState();
     void replacePromptText(const QString& text);

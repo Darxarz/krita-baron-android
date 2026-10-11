@@ -33,6 +33,7 @@ public:
     void account();
     void restoreLogin(bool connect = true);
     void models();
+    void refreshLoras();
     void modelMetadata(const QString& name, const QString& kind,
         std::function<void(const QJsonObject&, const QString&)> done, bool refresh = false);
     void quote(const QJsonObject& prompt);
@@ -51,6 +52,7 @@ Q_SIGNALS:
     void browserLogin(const QUrl& url, const QString& code);
     void authenticated();
     void accountReady(const QJsonObject& account);
+    void lorasReady(const QJsonObject& data);
     void modelsReady(const QJsonObject& catalog);
     void prepared(const QJsonObject& data);
     void quoted(const QJsonObject& data);

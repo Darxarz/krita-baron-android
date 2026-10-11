@@ -14,7 +14,7 @@ AuthorCredits::AuthorCredits(QWidget* parent) : QWidget(parent) {
     title->setFont(font);
     layout->addWidget(title);
     for (const auto& text : { tr("Original author: Acly and contributors"),
-             tr("Native Android port and modifications: Darxarz — Baron Edition"),
+             tr("Native Android port and modifications: Darxarz вЂ” Baron Edition"),
              tr("Krita: the Krita development team and contributors"),
              tr("This is an independent modified port. Acly and the Krita team do not maintain this edition.") }) {
         auto label = new QLabel(text, this);
@@ -46,7 +46,7 @@ AuthorCredits::AuthorCredits(QWidget* parent) : QWidget(parent) {
     auto modifications = new QLabel(
         "<a href='https://github.com/Darxarz/krita-baron-android'>Baron Edition: native port source</a><br><br>"
         "<a href='https://github.com/Darxarz/krita-ai-diffusion-baron-edition'>Baron Edition: Python plugin modifications</a><br><br>"
-        "<a href='https://orchestrion.su'>Orchestrion</a><br><br>"
+        "<a href='https://orchestrion.ink'>Orchestrion</a><br><br>"
         "<a href='https://www.gnu.org/licenses/gpl-3.0.html'>GNU GPL v3 or later</a>", this);
     modifications->setOpenExternalLinks(true);
     modifications->setObjectName("modifierSourceLinks");

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "Credentials.h"
+#include "ServiceAddress.h"
 #include <QCryptographicHash>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -33,10 +34,27 @@ QString transform(const QString& method, const QString& value) {
 }
 QByteArray BaronCredentials::load(const QUrl& root) {
     QSettings settings("BaronEdition", "Orchestrion");
-    const auto raw = transform("unseal", settings.value(credentialKey(root), settings.value("encryptedLogin")).toString());
-    const auto data = QJsonDocument::fromJson(raw.toUtf8()).object();
-    return data["website"].toString() == root.toString() ? data["token"].toString().toUtf8()
-                                                         : QByteArray();
+    QList<QUrl> addresses { root };
+    if (root == QUrl("https://orchestrion.ink")) {
+        addresses.append(QUrl("https://orchestrion.su"));
+        addresses.append(QUrl("https://orchestrion.su:443"));
+    }
+    QStringList candidates;
+    for (const auto& address : addresses)
+        candidates.append(settings.value(credentialKey(address)).toString());
+    candidates.append(settings.value("encryptedLogin").toString());
+    for (const auto& encrypted : candidates) {
+        if (encrypted.isEmpty()) continue;
+        const auto raw = transform("unseal", encrypted);
+        const auto data = QJsonDocument::fromJson(raw.toUtf8()).object();
+        const QUrl saved(data["website"].toString());
+        if (saved != root && BaronService::migrate(saved) != root) continue;
+        const auto token = data["token"].toString().toUtf8();
+        if (token.isEmpty()) continue;
+        if (saved != root) save(root, token);
+        return token;
+    }
+    return {};
 }
 bool BaronCredentials::save(const QUrl& root, const QByteArray& token) {
     const auto data = QJsonDocument(
@@ -53,6 +71,10 @@ void BaronCredentials::clear(const QUrl& root) {
     QSettings settings("BaronEdition", "Orchestrion");
     if (root.isEmpty()) { settings.remove("encryptedLogin"); return; }
     settings.remove(credentialKey(root));
+    if (root == QUrl("https://orchestrion.ink")) {
+        settings.remove(credentialKey(QUrl("https://orchestrion.su")));
+        settings.remove(credentialKey(QUrl("https://orchestrion.su:443")));
+    }
     const auto legacy = QJsonDocument::fromJson(transform("unseal", settings.value("encryptedLogin").toString()).toUtf8()).object();
-    if (legacy["website"].toString() == root.toString()) settings.setValue("encryptedLogin", QString());
+    if (BaronService::migrate(QUrl(legacy["website"].toString())) == root) settings.setValue("encryptedLogin", QString());
 }

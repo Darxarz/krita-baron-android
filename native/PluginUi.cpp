@@ -485,11 +485,11 @@ void PromptEditor::insertCompletion(const QString& value) {
     else text.replace("(","\\(").replace(")","\\)");
     cursor.insertText(text);setTextCursor(cursor);hideCompletion();m_inserting=false;
 }
-void PromptEditor::insertLora(const QJsonObject& lora, double strength) {
+void PromptEditor::insertLora(const QJsonObject& lora, double strength, bool promptOnly) {
     QString name=lora["name"].toString().replace('\\','/');
     if(name.endsWith(".safetensors",Qt::CaseInsensitive))name.chop(12);
     if(name.isEmpty()||name.contains(':')||name.contains('<')||name.contains('>'))return;
-    const QString tag=QString("<lora:%1:%2>").arg(name,QString::number(strength,'g',8));
+    const QString tag=promptOnly ? QString("<lora:%1>").arg(name) : QString("<lora:%1:%2>").arg(name,QString::number(strength,'g',8));
     const auto text=toPlainText();auto matches=QRegularExpression("<lora:([^:<>]+)(?::[^:<>]*)?>",QRegularExpression::CaseInsensitiveOption).globalMatch(text);
     auto cursor=textCursor();bool existing=false;
     while(matches.hasNext()) {
@@ -497,10 +497,12 @@ void PromptEditor::insertLora(const QJsonObject& lora, double strength) {
         if(normalized.endsWith(".safetensors",Qt::CaseInsensitive))normalized.chop(12);
         if(normalized.compare(name,Qt::CaseInsensitive)==0){cursor.setPosition(match.capturedStart());cursor.setPosition(match.capturedEnd(),QTextCursor::KeepAnchor);existing=true;break;}
     }
+    if (promptOnly && existing) return;
+    if (promptOnly) cursor.movePosition(QTextCursor::End);
     QString fill=tag;
     if(!existing) {
         QStringList words;for(auto word:lora["triggerWords"].toArray())words.append(word.toString());
-        if(!words.isEmpty())fill+=QString(" "+words.join(", "));
+        if(!promptOnly&&!words.isEmpty())fill+=QString(" "+words.join(", "));
         if(cursor.selectionStart()>0&&!text[cursor.selectionStart()-1].isSpace())fill.prepend(' ');
         if(cursor.selectionEnd()<text.size()&&!text[cursor.selectionEnd()].isSpace())fill.append(' ');
     }

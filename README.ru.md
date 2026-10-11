@@ -6,9 +6,9 @@
 
 ## Скачать
 
-- **[APK 0.1.36 · Android 7+, ARM64](https://github.com/Darxarz/krita-baron-android/releases/download/v0.1.36/krita-baron-android-arm64-v0.1.36.apk)**
-- **[Плагин 1.53.0-baron.16 · Windows, Krita 5.x/Qt5](https://github.com/Darxarz/krita-ai-diffusion-baron-edition/releases/download/v1.53.0-baron.16/krita_ai_diffusion-1.53.0-baron.16.zip)**
-- [Полные исходники Android-сборки](https://github.com/Darxarz/krita-baron-android/releases/download/v0.1.36/krita-baron-edition-v0.1.36-source.zip)
+- **[APK 0.1.37 · Android 7+, ARM64](https://github.com/Darxarz/krita-baron-android/releases/download/v0.1.37/krita-baron-android-arm64-v0.1.37.apk)**
+- **[Плагин 1.53.0-baron.17 · Windows, Krita 5.x/Qt5](https://github.com/Darxarz/krita-ai-diffusion-baron-edition/releases/download/v1.53.0-baron.17/krita_ai_diffusion-1.53.0-baron.17.zip)**
+- [Полные исходники Android-сборки](https://github.com/Darxarz/krita-baron-android/releases/download/v0.1.37/krita-baron-edition-v0.1.37-source.zip)
 
 Основа Android-сборки — стабильная Krita 5.3.4 / Qt5. Сам порт Baron остаётся
 предварительной версией; официальная Android-платформа Krita имеет статус beta.

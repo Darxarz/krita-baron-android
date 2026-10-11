@@ -15,7 +15,7 @@
 #endif
 
 QUrl BaronUpdates::feedUrl() {
-    return QUrl("https://orchestrion.su/baron-updates/stable.json");
+    return QUrl("https://orchestrion.ink/baron-updates/stable-ink.json");
 }
 int BaronUpdates::installedVersionCode() {
 #ifdef Q_OS_ANDROID

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "BaronPanel.h"
+#include "ServiceAddress.h"
 #include "BackgroundWork.h"
 #include "AuthorCredits.h"
 #include "ConnectionButton.h"
@@ -132,7 +133,13 @@ BaronPanel::BaronPanel(CanvasHost* host, QWidget* parent, PromptEditor::Completi
     managed->setToolTip(tr("The Android port connects to a remote server; running ComfyUI on the tablet is not supported."));
     choicesLayout->addWidget(managed, 1, 0);
     connectLayout->addRow(choices);
-    m_url = new QLineEdit("https://orchestrion.su", connection);
+    {
+        QSettings settings("BaronEdition", "Orchestrion");
+        const auto saved = settings.value("website", "https://orchestrion.ink").toString();
+        const auto migrated = BaronService::migrate(QUrl(saved)).toString();
+        if (saved != migrated) settings.setValue("website", migrated);
+    }
+    m_url = new QLineEdit("https://orchestrion.ink", connection);
     m_url->setObjectName("websiteAddress");
     connectLayout->addRow(tr("Website"), m_url);
     auto signIn = new QPushButton(tr("Sign in through your browser"), connection);
@@ -168,7 +175,7 @@ BaronPanel::BaronPanel(CanvasHost* host, QWidget* parent, PromptEditor::Completi
         choiceGroup->button(m_connectionMode->currentIndex())->setChecked(true);
         m_url->setText(backend == OrchestrionClient::interstice ? "https://api.interstice.cloud"
             : backend == OrchestrionClient::comfyui ? settings.value("comfyServer", "http://192.168.50.191:8188").toString()
-            : settings.value("website", "https://orchestrion.su").toString());
+            : settings.value("website", "https://orchestrion.ink").toString());
         m_url->setVisible(backend != OrchestrionClient::interstice);
         connectLayout->labelForField(m_url)->setVisible(backend != OrchestrionClient::interstice);
         token->setVisible(backend == OrchestrionClient::comfyui); token->clear();
@@ -829,7 +836,7 @@ BaronPanel::BaronPanel(CanvasHost* host, QWidget* parent, PromptEditor::Completi
                 if (!m_prompt->isVisible())
                     if (auto regional = m_guidance->findChild<PromptEditor*>("regionPrompt"))
                         editor = regional;
-                static_cast<PromptEditor*>(editor)->insertLora(data);
+                static_cast<PromptEditor*>(editor)->insertLora(data, 1, true);
                 tabs->setCurrentIndex(0);
                 if (auto dialog = qobject_cast<QDialog*>(m_catalogView->parentWidget()))
                     dialog->accept();
@@ -861,6 +868,22 @@ BaronPanel::BaronPanel(CanvasHost* host, QWidget* parent, PromptEditor::Completi
     });
     connect(m_catalogBrowser, &ModelCatalog::modelChosen, this, chooseCatalogModel);
     connect(m_client, &OrchestrionClient::modelsReady, this, &BaronPanel::showModels);
+    connect(m_client, &OrchestrionClient::lorasReady, this, [this](const QJsonObject& data) {
+        if (!data["items"].isArray()) return;
+        QJsonArray updated;
+        for (const auto& item : m_catalog)
+            if (item.toObject()["kind"] != "lora") updated.append(item);
+        for (const auto& item : data["items"].toArray())
+            if (item.toObject()["kind"] == "lora") updated.append(ModelCatalog::normalize(item.toObject()));
+        if (updated == m_catalog) return;
+        m_catalog = updated;
+        m_catalogBrowser->setModels(m_catalog);
+        for (auto editor : findChildren<PromptEditor*>()) editor->setLoraCatalog(m_catalog);
+    });
+    auto catalogTimer = new QTimer(this);
+    catalogTimer->setInterval(60000);
+    connect(catalogTimer, &QTimer::timeout, m_client, &OrchestrionClient::refreshLoras);
+    catalogTimer->start();
 
     auto results = new QWidget(tabs);
     auto resultsLayout = new QVBoxLayout(results);
@@ -1604,7 +1627,7 @@ BaronPanel::BaronPanel(CanvasHost* host, QWidget* parent, PromptEditor::Completi
     m_uiReady = true;
     QSettings settings("BaronEdition", "Orchestrion");
     m_restoring = true;
-    m_url->setText(settings.value("website", "https://orchestrion.su").toString());
+    m_url->setText(settings.value("website", "https://orchestrion.ink").toString());
     m_prompt->setPlainText(settings.value("prompt").toString());
     m_negative->setPlainText(settings.value("negative").toString());
     m_mode->setCurrentIndex(qMax(0, m_mode->findData(settings.value("mode", "generate"))));
@@ -2585,7 +2608,9 @@ void BaronPanel::filterCatalog() {
 }
 void BaronPanel::openCatalog(const QString& kind) {
     m_loadedThumbnails.clear();
-    if (m_gallery->count() == 0 && m_client->signedIn())
+    if (m_client->backend() == OrchestrionClient::orchestrion && !m_catalog.isEmpty())
+        m_client->refreshLoras();
+    else if (m_gallery->count() == 0 && m_client->signedIn())
         m_client->models();
     m_catalogKind->setCurrentIndex(m_catalogKind->findData(kind));
     QDialog dialog(this);

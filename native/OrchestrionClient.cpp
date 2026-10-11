@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "OrchestrionClient.h"
 #include "Credentials.h"
+#include "ServiceAddress.h"
 #include "CloudWorkflow.h"
 #include "BackgroundWork.h"
 #include <QBuffer>
@@ -70,7 +71,7 @@ QUrl OrchestrionClient::validateRoot(const QString& text, QString* error) {
     };
     if (!url.isValid() || url.host().isEmpty()
         || (url.scheme() != "https" && url.scheme() != "http"))
-        return reject(tr("Enter the website address: https://orchestrion.su"));
+        return reject(tr("Enter the website address: https://orchestrion.ink"));
     if (!url.userInfo().isEmpty() || url.hasQuery() || url.hasFragment()
         || (!url.path().isEmpty() && url.path() != "/"))
         return reject(tr("Enter the website root address without a token or password"));
@@ -86,7 +87,7 @@ QUrl OrchestrionClient::validateRoot(const QString& text, QString* error) {
     }
     QUrl result = url;
     result.setPath("");
-    return result;
+    return BaronService::migrate(result);
 }
 
 bool OrchestrionClient::setRoot(const QString& text) {
@@ -453,6 +454,10 @@ void OrchestrionClient::modelMetadata(const QString& name, const QString& kind,
     const QString path = "/api/krita/model-metadata?name=" + QString::fromLatin1(QUrl::toPercentEncoding(name))
         + "&kind=" + QString(kind == "lora" ? "lora" : "checkpoint");
     catalogRequest(path, [done](const QJsonObject& data, const QString& error) { done(data.value("data").toObject(), error); }, refresh);
+}
+void OrchestrionClient::refreshLoras() {
+    if (m_backend != orchestrion || !signedIn()) return;
+    request("/api/krita/models", {}, false, [this](const auto& data) { emit lorasReady(data); });
 }
 void OrchestrionClient::models() {
     if (m_backend == comfyui) {

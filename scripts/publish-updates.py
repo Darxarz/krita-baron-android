@@ -60,7 +60,7 @@ def publish(windows, android, version, destinations):
             raise ValueError("Package size exceeds update limit")
         manifest[platform] = {
             "version": plugin_version if platform == "windows" else version["version"],
-            "url": "https://orchestrion.su/baron-updates/releases/" + names[platform],
+            "url": "https://orchestrion.ink/baron-updates/releases/" + names[platform],
             "bytes": size,
             "sha256": sha(package),
         }
@@ -84,9 +84,13 @@ def publish(windows, android, version, destinations):
         copy_verified(android, destination / "releases" / names["android"])
     for destination in destinations:
         destination = destination.resolve()
-        pending = destination / "stable.json.pending"
-        pending.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
-        os.replace(pending, destination / "stable.json")
+        legacy = json.loads(json.dumps(manifest))
+        for platform in ("windows", "android"):
+            legacy[platform]["url"] = legacy[platform]["url"].replace("https://orchestrion.ink/", "https://orchestrion.su/")
+        for name, data in (("stable-ink.json", manifest), ("stable.json", legacy)):
+            pending = destination / (name + ".pending")
+            pending.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+            os.replace(pending, destination / name)
     print(json.dumps(manifest, indent=2))
 
 

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "BaronPanel.h"
+#include "ServiceAddress.h"
 #include "BaronUpdates.h"
 #include "GuidancePanel.h"
 #include "Localization.h"
@@ -140,6 +141,55 @@ class ClientTest : public QObject {
     Q_OBJECT
     QTemporaryDir settingsDirectory;
 private slots:
+    void officialDomainMigrationAndCustomServerIsolation() {
+        QCOMPARE(OrchestrionClient::validateRoot("https://orchestrion.su"), QUrl("https://orchestrion.ink"));
+        QCOMPARE(OrchestrionClient::validateRoot("https://orchestrion.su:443/"), QUrl("https://orchestrion.ink"));
+        QCOMPARE(BaronService::migrate(QUrl("https://orchestrion.su/krita/token?a=1")), QUrl("https://orchestrion.ink/krita/token?a=1"));
+        for (const auto& address : {"https://orchestrion.su.evil.org", "https://user@orchestrion.su", "https://orchestrion.su:8443", "http://192.168.1.5:8188"})
+            QCOMPARE(BaronService::migrate(QUrl(address)), QUrl(address));
+    }
+    void uploadedLoraRefreshPreservesStyleAndUpdatesPromptCompletion() {
+        BaronPanel panel(nullptr);
+        panel.show();
+        auto client = panel.findChild<OrchestrionClient*>();
+        auto prompt = panel.findChild<PromptEditor*>("positivePrompt");
+        auto styles = panel.findChild<QComboBox*>("styleSelect");
+        auto catalog = panel.findChild<ModelCatalog*>();
+        QVERIFY(client && prompt && styles && catalog);
+        client->modelsReady(QJsonObject{{"items", QJsonArray{QJsonObject{{"kind", "checkpoint"}, {"name", "Base.safetensors"}, {"title", "Base"}, {"family", "Illustrious"}}}}});
+        prompt->setPlainText("portrait");
+        const auto style = styles->currentData();
+        const auto styleCount = styles->count();
+        const QJsonObject lora{{"kind", "lora"}, {"name", "action/ExcessiveAnimeNosebleed-000013.safetensors"}, {"title", "Nosebleed"}, {"family", "Illustrious"}};
+        client->lorasReady(QJsonObject{{"items", QJsonArray{lora}}});
+        QCOMPARE(styles->currentData(), style);
+        QCOMPARE(styles->count(), styleCount);
+        catalog->modelChosen(lora);
+        QCOMPARE(prompt->toPlainText(), QString("portrait <lora:action/ExcessiveAnimeNosebleed-000013>"));
+        QCOMPARE(styles->count(), styleCount);
+        QCOMPARE(styles->currentData(), style);
+        prompt->setPlainText("<lora:action/Excessive");
+        prompt->moveCursor(QTextCursor::End);
+        prompt->setFocus();
+        QTest::keyClick(prompt, Qt::Key_Right);
+        auto completer = prompt->findChild<QCompleter*>();
+        QVERIFY(completer);
+        QTRY_COMPARE(completer->model()->rowCount(), 1);
+        QCOMPARE(completer->model()->index(0, 0).data().toString(), QString("action/ExcessiveAnimeNosebleed-000013"));
+    }
+    void galleryLoraAppendsAtEndAndPreservesExistingWeight() {
+        PromptEditor editor;
+        editor.setPlainText("portrait in a forest");
+        editor.moveCursor(QTextCursor::Start);
+        const QJsonObject lora{{"kind", "lora"}, {"name", "action\\ExcessiveAnimeNosebleed-000013.safetensors"}, {"triggerWords", QJsonArray{"nosebleed"}}};
+        editor.insertLora(lora, 1, true);
+        QCOMPARE(editor.toPlainText(), QString("portrait in a forest <lora:action/ExcessiveAnimeNosebleed-000013>"));
+        editor.insertLora(lora, 1, true);
+        QCOMPARE(editor.toPlainText().count("<lora:"), 1);
+        editor.setPlainText("portrait <lora:action/ExcessiveAnimeNosebleed-000013:0.4>");
+        editor.insertLora(lora, 1, true);
+        QCOMPARE(editor.toPlainText(), QString("portrait <lora:action/ExcessiveAnimeNosebleed-000013:0.4>"));
+    }
     void upscaleControlsMatchOriginalPlugin() {
         UpscaleWidget widget;
         auto slider = widget.findChild<QSlider*>("upscaleFactorSlider");
@@ -1876,7 +1926,7 @@ private slots:
             void fetchImage(const QJsonObject&, int) override { }
         };
         OrchestrionClient connection;
-        QVERIFY(connection.setRoot("https://orchestrion.su"));
+        QVERIFY(connection.setRoot("https://orchestrion.ink"));
         QList<Client*> clients;
         JobQueue queue(&connection, nullptr, [&](QObject* parent) {
             auto client = new Client(parent);
@@ -2109,14 +2159,14 @@ private slots:
     void updateManifestRejectsWrongOriginAndPackage() {
         QJsonObject package { { "version", "0.1.6" }, { "version_code", 5050406 },
             { "package", "org.krita.baron.debug" }, { "bytes", 3 },
-            { "url", "https://orchestrion.su/baron-updates/releases/update.apk" },
+            { "url", "https://orchestrion.ink/baron-updates/releases/update.apk" },
             { "sha256", QString(64, 'a') } };
         QJsonObject manifest { { "schema", 1 }, { "edition", "baron" }, { "channel", "stable" },
             { "android", package } };
         QVERIFY(!BaronUpdates::validatePackage(manifest, BaronUpdates::feedUrl()).isEmpty());
         for (const auto& url : { "https://evil.example/baron-updates/releases/update.apk",
-                 "http://orchestrion.su/baron-updates/releases/update.apk",
-                 "https://user@orchestrion.su/baron-updates/releases/update.apk" }) {
+                 "http://orchestrion.ink/baron-updates/releases/update.apk",
+                 "https://user@orchestrion.ink/baron-updates/releases/update.apk" }) {
             package["url"] = url;
             manifest["android"] = package;
             QVERIFY(BaronUpdates::validatePackage(manifest, BaronUpdates::feedUrl()).isEmpty());
@@ -2128,7 +2178,7 @@ private slots:
             const QByteArray bytes("test apk payload");
             QJsonObject package { { "version", "0.1.8" }, { "version_code", BaronUpdates::installedVersionCode() + 1 },
                 { "package", "org.krita.baron.debug" }, { "bytes", bytes.size() },
-                { "url", "https://orchestrion.su/baron-updates/releases/update.apk" },
+                { "url", "https://orchestrion.ink/baron-updates/releases/update.apk" },
                 { "sha256",
                     QString::fromLatin1(
                         QCryptographicHash::hash(bytes, QCryptographicHash::Sha256).toHex()) } };
@@ -2234,13 +2284,13 @@ private slots:
     void modelInformationUsesEncodedPathAndDoesNotStopGeneration() {
         PreviewNetwork network;
         network.responses={{200,{},R"({"success":true,"data":{"trainedWords":["hero"],"description":"Author notes"}})"},{404,{},"{}"}};
-        OrchestrionClient client(nullptr,&network); QVERIFY(client.setRoot("https://orchestrion.su")); client.setAccessToken("test-token");
+        OrchestrionClient client(nullptr,&network); QVERIFY(client.setRoot("https://orchestrion.ink")); client.setAccessToken("test-token");
         QSignalSpy errors(&client,&OrchestrionClient::error); int calls=0;
         client.modelMetadata("characters/Hero #2.safetensors","lora",[&](const QJsonObject& data,const QString& error) {
             QVERIFY(error.isEmpty()); QCOMPARE(data.value("trainedWords").toArray().first().toString(),QString("hero")); ++calls;
         });
         QTRY_COMPARE(calls,1);
-        QCOMPARE(network.requests.first().url().toEncoded(),QByteArray("https://orchestrion.su/api/krita/model-metadata?name=characters%2FHero%20%232.safetensors&kind=lora"));
+        QCOMPARE(network.requests.first().url().toEncoded(),QByteArray("https://orchestrion.ink/api/krita/model-metadata?name=characters%2FHero%20%232.safetensors&kind=lora"));
         QCOMPARE(network.requests.first().rawHeader("Authorization"),QByteArray("Bearer test-token"));
         client.modelMetadata("private.safetensors","checkpoint",[&](const QJsonObject& data,const QString& error) {
             QVERIFY(data.isEmpty()); QVERIFY(!error.isEmpty()); ++calls;
@@ -2495,15 +2545,15 @@ private slots:
     void websiteAddresses_data() {
         QTest::addColumn<QString>("address");
         QTest::addColumn<bool>("valid");
-        QTest::newRow("https") << "https://orchestrion.su" << true;
+        QTest::newRow("https") << "https://orchestrion.ink" << true;
         QTest::newRow("lan") << "http://192.168.50.191:3000" << true;
         QTest::newRow("lan-v6") << "http://[fd00::1]:3000" << true;
         QTest::newRow("localhost") << "http://127.0.0.1:3000" << true;
-        QTest::newRow("public-http") << "http://orchestrion.su" << false;
-        QTest::newRow("credentials") << "https://user:secret@orchestrion.su" << false;
-        QTest::newRow("query-token") << "https://orchestrion.su?token=secret" << false;
-        QTest::newRow("path-token") << "https://orchestrion.su/krita/secret" << false;
-        QTest::newRow("fragment") << "https://orchestrion.su#token" << false;
+        QTest::newRow("public-http") << "http://orchestrion.ink" << false;
+        QTest::newRow("credentials") << "https://user:secret@orchestrion.ink" << false;
+        QTest::newRow("query-token") << "https://orchestrion.ink?token=secret" << false;
+        QTest::newRow("path-token") << "https://orchestrion.ink/krita/secret" << false;
+        QTest::newRow("fragment") << "https://orchestrion.ink#token" << false;
         QTest::newRow("file") << "file:///tmp/private" << false;
     }
     void websiteAddresses() {
@@ -2552,7 +2602,7 @@ private slots:
             {503, {}, R"({"error":"Translation unavailable"})"}
         };
         OrchestrionClient client(nullptr, &network);
-        QVERIFY(client.setRoot("https://orchestrion.su"));
+        QVERIFY(client.setRoot("https://orchestrion.ink"));
         client.setAccessToken("test-device-token");
         int replies = 0;
         client.translatePrompt("мягкий свет", "translate", [&](const QJsonObject& data) { QCOMPARE(data["translatedText"].toString(), QString("soft light")); ++replies; }, "qwen-image-edit-2509.safetensors");
@@ -3065,7 +3115,7 @@ private slots:
         QCOMPARE(BaronUpdates::installedVersionCode(), metadata["version_code"].toInt());
         QJsonObject package { { "version", metadata["version"] }, { "version_code", metadata["version_code"] },
             { "package", "org.krita.baron.debug" }, { "bytes", 42 },
-            { "url", "https://orchestrion.su/baron-updates/releases/update.apk" },
+            { "url", "https://orchestrion.ink/baron-updates/releases/update.apk" },
             { "sha256", QString(64, 'a') } };
         QJsonObject manifest { { "schema", 1 }, { "edition", "baron" }, { "channel", "stable" }, { "android", package } };
         PreviewNetwork network;
