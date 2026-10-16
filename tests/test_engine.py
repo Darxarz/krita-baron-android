@@ -32,6 +32,20 @@ def image(mask=False):
 
 
 class EngineTests(unittest.TestCase):
+    def test_compositing_preserves_manual_feather_and_plugin_blend(self):
+        mask = workflow.Output(100, 0)
+        for blend in (0, 1, 5, 20):
+            graph = workflow.ComfyWorkflow()
+            params = workflow.InpaintParams(workflow.InpaintMode.custom, workflow.Bounds(0, 0, 64, 64))
+            params.blend = blend
+            result = workflow.denoise_to_compositing_mask(graph, mask, params)
+            if blend == 0:
+                self.assertEqual(result, mask)
+                self.assertEqual(graph.root, {})
+            else:
+                self.assertEqual(graph.root["1"]["class_type"], "ThresholdMask")
+                self.assertEqual(graph.root["2"]["inputs"]["blur"], blend)
+
     def test_direct_comfy_discovery_uses_original_model_detection(self):
         result = compile_request(
             {
@@ -297,7 +311,7 @@ class EngineTests(unittest.TestCase):
                 "model": self.qwen,
                 "width": 512,
                 "height": 512,
-                "prompt": "персонаж в красном плаще",
+                "prompt": "РїРµСЂСЃРѕРЅР°Р¶ РІ РєСЂР°СЃРЅРѕРј РїР»Р°С‰Рµ",
                 "seed": 42,
             },
             "object_info": self.info,
@@ -312,7 +326,7 @@ class EngineTests(unittest.TestCase):
             check=True,
         )
         graph = json.loads(process.stdout)["prompt"]
-        self.assertIn("персонаж в красном плаще", json.dumps(graph, ensure_ascii=False))
+        self.assertIn("РїРµСЂСЃРѕРЅР°Р¶ РІ РєСЂР°СЃРЅРѕРј РїР»Р°С‰Рµ", json.dumps(graph, ensure_ascii=False))
 
     def test_custom_inpaint_matches_plugin_flags_and_output_bounds(self):
         from ai_diffusion.backend import api

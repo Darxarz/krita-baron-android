@@ -1133,8 +1133,8 @@ def apply_grow_feather(w: ComfyWorkflow, mask: Output, inpaint: InpaintParams):
 
 
 def denoise_to_compositing_mask(w: ComfyWorkflow, mask: Output, inpaint: InpaintParams):
-    mask = w.threshold_mask(mask, 0.0)
     if inpaint.blend > 0:
+        mask = w.threshold_mask(mask, 0.0)
         mask = w.shrink_mask(mask, inpaint.blend // 2, inpaint.blend)
     return mask
 

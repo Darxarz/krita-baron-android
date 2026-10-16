@@ -28,7 +28,7 @@
     "ai_diffusion/backend/resolution.py": "96e127c8aadd91f66fd99a110e4fe50c3cf81b89d2019e3811cf128393292122",
     "ai_diffusion/backend/resources.py": "814d2dcac4ee4369754ad121955c9b3fc3392408e58294ca5db1e16d0634667d",
     "ai_diffusion/backend/server.py": "0d8db6261e8e6bf2a33f7f5807c85bb9f414b7abf151fa54361a26a2f82b7d35",
-    "ai_diffusion/backend/workflow.py": "351cac499afd745b41afb6c2e82d7930cf621eb1a78ac3fe200bd86bd5720776",
+    "ai_diffusion/backend/workflow.py": "5769d045a71b1f127a1d0c05299904d31b1bfcb34bdd47eca0a1a09a6a828a01",
     "ai_diffusion/backend/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "ai_diffusion/language/en.json": "de7ac7f50a18f81b6b493e241eef42403282c911cdb52fe0539da219b3f1fbc5",
     "ai_diffusion/language/es-ca.json": "8295237b2fe58cb512d372336b6933863ade2463a1feb5105bbb51e2bc6a2276",
@@ -430,5 +430,8 @@
     "tests/mock/krita.py": "2982986cacce9528ca4c18e9037768dcb8ccd2798b95054ebd6621c99f2cfcb2",
     "tests/mock/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "ai_diffusion/backend/a1111.py": "f3d3158f709570e75ff3cdb8e1ad0faad8fbcf5dacc0e9a7b5f72b36fc0f391d"
-  }
+  },
+  "patches": [
+    "Preserve soft compositing mask when inpaint blend is zero"
+  ]
 }
