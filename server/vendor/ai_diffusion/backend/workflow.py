@@ -166,6 +166,8 @@ def load_checkpoint_with_lora(w: ComfyWorkflow, checkpoint: CheckpointInput, mod
                 clip = w.load_clip(te["qwen_3vl_4b"], type="krea2")
             case Arch.qwen2:
                 clip = w.load_clip(te["qwen_3vl_8b"], type="qwen_image")
+            case Arch.moss:
+                clip = w.load_clip(te["qwen_3_5_9b"], type="moss_image")
             case _:
                 raise RuntimeError(f"No text encoder for model architecture {arch.name}")
 
@@ -186,12 +188,19 @@ def load_checkpoint_with_lora(w: ComfyWorkflow, checkpoint: CheckpointInput, mod
         if arch is Arch.krea2
         else checkpoint.loras
     ):
-        if arch is Arch.krea2 and (
-            _is_krea_edit_lora(lora.name) or "krea2_style_reference" in lora.name.lower()
+        # MOSS: the quantized text encoder must not be patched
+        if arch is Arch.moss or (
+            arch is Arch.krea2
+            and (_is_krea_edit_lora(lora.name) or "krea2_style_reference" in lora.name.lower())
         ):
             model = w.load_lora_model(model, lora.name, lora.strength)
         else:
             model, clip = w.load_lora(model, clip, lora.name, lora.strength, lora.strength)
+
+    if arch is Arch.moss:
+        # Recommended by the authors: skip single block 22 for the unconditional pass.
+        # MOSS has its shift baked in, ModelSampling* nodes must never be applied.
+        model = w.skip_layer_guidance_dit_simple(model, single_layers="22")
 
     if arch is Arch.sd3:
         model = w.model_sampling_sd3(model)

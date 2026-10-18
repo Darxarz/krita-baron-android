@@ -94,6 +94,7 @@ class Arch(Enum):
     zimage = "Z-Image"
     ernie = "ERNIE Image"
     krea2 = "Krea 2"
+    moss = "MOSS-Image"
 
     auto = "Automatic"
     all = "All"
@@ -132,7 +133,7 @@ class Arch(Enum):
             return Arch.qwen_l
         if string == "qwen-image":
             return Arch.qwen
-        if string in {"qwen-image21", "qwen2"}:
+        if string in {"qwen-image21", "qwen-image-2.1", "qwen2"}:
             return Arch.qwen2
         if string == "unknown" and Arch.is_qwen21_filename(filename):
             return Arch.qwen2
@@ -144,6 +145,8 @@ class Arch(Enum):
             return Arch.ernie
         if string == "krea2":
             return Arch.krea2
+        if string in {"moss-image", "moss_image", "moss"}:
+            return Arch.moss
         return None
 
     @staticmethod
@@ -266,6 +269,8 @@ class Arch(Enum):
                 return ["ministral"]
             case Arch.krea2:
                 return ["qwen_3vl_4b"]
+            case Arch.moss:
+                return ["qwen_3_5_9b"]
             case _:
                 raise ValueError(f"Unsupported architecture: {self}")
 
@@ -291,6 +296,7 @@ class Arch(Enum):
             Arch.zimage,
             Arch.ernie,
             Arch.krea2,
+            Arch.moss,
         ]
 
 
@@ -841,6 +847,8 @@ search_paths: dict[str, list[str]] = {
     resource_id(ResourceKind.text_encoder, Arch.all, "ministral"): ["ministral-3-3b", "ministral"],
     resource_id(ResourceKind.text_encoder, Arch.all, "qwen_3vl_4b"): ["qwen3vl_4b", "qwen_3vl_4b", "qwen3-vl-4b"],
     resource_id(ResourceKind.text_encoder, Arch.all, "qwen_3vl_8b"): ["qwen3vl_8b", "qwen_3vl_8b", "qwen3-vl-8b"],
+    # No bare "qwen3.5_9b": the Qwen Image 2.1 prompt enhancer shares that prefix
+    resource_id(ResourceKind.text_encoder, Arch.all, "qwen_3_5_9b"): ["qwen3.5_9b_w4a8", "qwen3.5_9b_int8", "qwen3.5_9b_fp8", "qwen3.5_9b_bf16", "qwen3.5_9b_fp16", "qwen_3.5_9b", "qwen3.5-9b", "qwen_3_5_9b"],
     resource_id(ResourceKind.vae, Arch.sd15, "default"): ["vae-ft-mse-840000-ema"],
     resource_id(ResourceKind.vae, Arch.sdxl, "default"): ["sdxl_vae"],
     resource_id(ResourceKind.vae, Arch.illu, "default"): ["sdxl_vae"],
@@ -860,6 +868,7 @@ search_paths: dict[str, list[str]] = {
     resource_id(ResourceKind.vae, Arch.zimage, "default"): ["z-image", "flux-", "flux_", "flux/", "flux1", "ae.s"],
     resource_id(ResourceKind.vae, Arch.ernie, "default"): ["flux2"],
     resource_id(ResourceKind.vae, Arch.krea2, "default"): ["qwen_image"],
+    resource_id(ResourceKind.vae, Arch.moss, "default"): ["flux2"],
 }
 # fmt: on
 
@@ -899,6 +908,8 @@ required_resource_ids = {
     ResourceId(ResourceKind.vae, Arch.ernie, "default"),
     ResourceId(ResourceKind.text_encoder, Arch.krea2, "qwen_3vl_4b"),
     ResourceId(ResourceKind.vae, Arch.krea2, "default"),
+    ResourceId(ResourceKind.text_encoder, Arch.moss, "qwen_3_5_9b"),
+    ResourceId(ResourceKind.vae, Arch.moss, "default"),
 }
 
 recommended_resource_ids = [

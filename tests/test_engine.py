@@ -551,6 +551,104 @@ class EngineTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 self.compile({"mode": "generate", "prompt_mode": "a1111", **data})
 
+    moss = "moss\\moss_image_sft_int8_convrot.safetensors"
+    moss_lora = "moss\\characters\\Baron_Satyr_MOSS.safetensors"
+
+    def moss_server(self, clip_type=True):
+        import copy
+
+        info = copy.deepcopy(self.info)
+        required = lambda node: info[node]["input"]["required"]  # noqa: E731
+        required("UNETLoader")["unet_name"][0].append(self.moss)
+        required("CLIPLoader")["clip_name"][0] += [
+            "qwen3.5_9b_qwen_image_2.1_pe_t2i.int8_convrot.safetensors",
+            "qwen3.5_9b_w4a8_gptq.safetensors",
+        ]
+        types = required("CLIPLoader")["type"][0]
+        if clip_type and "moss_image" not in types:
+            types.append("moss_image")
+        elif not clip_type and "moss_image" in types:
+            types.remove("moss_image")
+        required("LoraLoader")["lora_name"][0].append(self.moss_lora)
+        metadata = {**self.metadata, self.moss: {"base_model": "moss-image", "is_inpaint": False}}
+        return info, metadata
+
+    def compile_moss(self, request, clip_type=True):
+        info, metadata = self.moss_server(clip_type)
+        payload = {"width": 1024, "height": 1024, "prompt": 'a sign that says "MOSS"', "seed": 7}
+        return compile_request(
+            {
+                "request": {**payload, "model": self.moss, **request},
+                "object_info": info,
+                "diffusion_models": metadata,
+            }
+        )
+
+    def test_moss_discovery_requires_moss_clip_type(self):
+        for clip_type in (True, False):
+            with self.subTest(clip_type=clip_type):
+                info, metadata = self.moss_server(clip_type)
+                result = compile_request(
+                    {
+                        "request": {"operation": "discover"},
+                        "object_info": info,
+                        "diffusion_models": metadata,
+                    }
+                )
+                names = {item["name"]: item for item in result["items"]}
+                if clip_type:
+                    self.assertEqual(names[self.moss]["architecture"], "moss")
+                else:
+                    self.assertNotIn(self.moss, names)
+
+    def test_moss_generate_uses_model_preset(self):
+        graph = self.compile_moss({"mode": "generate", "negative": "blurry"})["prompt"]
+        nodes = {node["class_type"]: node["inputs"] for node in graph.values()}
+        self.assertEqual(nodes["UNETLoader"]["unet_name"], self.moss)
+        self.assertEqual(nodes["CLIPLoader"]["clip_name"], "qwen3.5_9b_w4a8_gptq.safetensors")
+        self.assertEqual(nodes["CLIPLoader"]["type"], "moss_image")
+        self.assertEqual(nodes["VAELoader"]["vae_name"], "flux2-vae.safetensors")
+        self.assertEqual(nodes["SkipLayerGuidanceDiTSimple"]["single_layers"], "22")
+        self.assertIn("EmptyFlux2LatentImage", nodes)
+        self.assertEqual(nodes["KSamplerSelect"]["sampler_name"], "euler")
+        self.assertEqual(nodes["BasicScheduler"]["scheduler"], "sgm_uniform")
+        self.assertEqual(nodes["BasicScheduler"]["steps"], 30)
+        self.assertAlmostEqual(nodes["CFGGuider"]["cfg"], 3)
+        self.assertFalse(any(t.startswith("ModelSampling") for t in nodes))
+        texts = [n["inputs"]["text"] for n in graph.values() if n["class_type"] == "CLIPTextEncode"]
+        self.assertIn("blurry", texts)
+
+    def test_moss_sampling_override_and_model_only_lora(self):
+        request = {
+            "mode": "generate",
+            "steps": 24,
+            "cfg": 4.5,
+            "loras": [{"name": self.moss_lora, "strength": 0.7}],
+        }
+        graph = self.compile_moss(request)["prompt"]
+        nodes = list(graph.values())
+        scheduler = next(n["inputs"] for n in nodes if n["class_type"] == "BasicScheduler")
+        self.assertEqual(scheduler["steps"], 24)
+        guider = next(n["inputs"] for n in nodes if n["class_type"] == "CFGGuider")
+        self.assertAlmostEqual(guider["cfg"], 4.5)
+        loras = [n["inputs"] for n in nodes if n["class_type"] == "LoraLoaderModelOnly"]
+        self.assertEqual([(l["lora_name"], l["strength_model"]) for l in loras], [(self.moss_lora, 0.7)])
+        self.assertFalse(any(n["class_type"] == "LoraLoader" for n in nodes))
+
+    def test_moss_selection_uses_differential_diffusion(self):
+        for mode, inpaint in (("generate", None), ("edit", {"mode": "custom", "fill": "neutral"})):
+            with self.subTest(mode=mode):
+                request = {"mode": mode, "width": 512, "height": 512, "image": image(),
+                           "mask": image(True), "instruction_edit": False}
+                if inpaint:
+                    request["inpaint_options"] = inpaint
+                graph = self.compile_moss(request)["prompt"]
+                types = {node["class_type"] for node in graph.values()}
+                self.assertIn("DifferentialDiffusion", types)
+                self.assertIn("SetLatentNoiseMask", types)
+                self.assertFalse(any("ControlNet" in t or "Fooocus" in t for t in types))
+                self.assertFalse(any(t.startswith("ModelSampling") for t in types))
+
 
 if __name__ == "__main__":
     unittest.main()

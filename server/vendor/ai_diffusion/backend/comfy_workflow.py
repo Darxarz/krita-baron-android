@@ -591,7 +591,7 @@ class ComfyWorkflow:
         w, h = extent.width, extent.height
         if arch.is_flux_like or arch.is_qwen_like or arch in (Arch.sd3, Arch.chroma, Arch.zimage):
             return self.add("EmptySD3LatentImage", 1, width=w, height=h, batch_size=batch_size)
-        if arch.is_flux2 or arch is Arch.ernie:
+        if arch.is_flux2 or arch in (Arch.ernie, Arch.moss):
             return self.add("EmptyFlux2LatentImage", 1, width=w, height=h, batch_size=batch_size)
         else:
             return self.add("EmptyLatentImage", 1, width=w, height=h, batch_size=batch_size)
@@ -1374,6 +1374,19 @@ class ComfyWorkflow:
             start_percent=0.15,
             end_percent=0.95,
             verbose=False,
+        )
+
+    def skip_layer_guidance_dit_simple(
+        self, model: Output, double_layers="", single_layers="", start=0.0, end=1.0
+    ):
+        return self.add(
+            "SkipLayerGuidanceDiTSimple",
+            1,
+            model=model,
+            double_layers=double_layers,
+            single_layers=single_layers,
+            start_percent=start,
+            end_percent=end,
         )
 
     def create_hook_lora(self, loras: list[tuple[str, float]]):

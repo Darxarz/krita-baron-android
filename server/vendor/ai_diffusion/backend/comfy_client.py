@@ -540,6 +540,12 @@ class ComfyClient(Client):
                         name, Arch.qwen2, FileFormat.diffusion
                     )
 
+        moss = [n for n, cp in models.checkpoints.items() if cp.arch is Arch.moss]
+        if moss and "moss_image" not in nodes.options("CLIPLoader", "type"):
+            log.warning("MOSS-Image: ComfyUI is too old (CLIPLoader has no 'moss_image' type)")
+            for name in moss:
+                del models.checkpoints[name]
+
         models.vae = nodes.options("VAELoader", "vae_name")
         models.loras = nodes.options("LoraLoader", "lora_name")
 
@@ -772,6 +778,7 @@ def _find_text_encoder_models(model_list: Sequence[str]):
         "qwen_3_8b",
         "qwen_3vl_4b",
         "qwen_3vl_8b",
+        "qwen_3_5_9b",
         "ministral",
     ]
     return {

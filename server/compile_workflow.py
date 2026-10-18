@@ -259,6 +259,8 @@ def compile_request(payload):
             if arch is Arch.qwen2
             else "krea2-edit-baron.json"
             if arch is Arch.krea2
+            else "moss-image.json"
+            if arch is Arch.moss
             else None
         )
         style = (
@@ -318,11 +320,12 @@ def compile_request(payload):
         style.sampler_steps = integer(
             data,
             "steps",
-            25 if arch is Arch.qwen2 else 10 if arch is Arch.krea2 else 20,
+            25 if arch is Arch.qwen2 else 10 if arch is Arch.krea2 else 30 if arch is Arch.moss else 20,
             1,
             100,
         )
-        style.cfg_scale = number(data, "cfg", 1 if arch in (Arch.qwen2, Arch.krea2) else 4, 0, 30)
+        default_cfg = 1 if arch in (Arch.qwen2, Arch.krea2) else 3 if arch is Arch.moss else 4
+        style.cfg_scale = number(data, "cfg", default_cfg, 0, 30)
         prompt, negative = data.get("prompt", ""), data.get("negative", "")
         if (
             not isinstance(prompt, str)

@@ -651,6 +651,9 @@ BaronPanel::BaronPanel(CanvasHost* host, QWidget* parent, PromptEditor::Completi
         } else if (name.contains("klein")) {
             m_cfg->setValue(1);
             m_steps->setValue(4);
+        } else if (name.contains("moss")) {
+            m_cfg->setValue(3);
+            m_steps->setValue(30);
         } else {
             m_cfg->setValue(4);
             m_steps->setValue(20);

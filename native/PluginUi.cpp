@@ -262,6 +262,8 @@ QString architectureIcon(const QString& family) {
         return "sd-version-qwen";
     if (name.contains("krea"))
         return "sd-version-krea2";
+    if (name.contains("moss"))
+        return "sd-version-moss";
     if (name.contains("flux 2") || name.contains("klein"))
         return "sd-version-flux-2";
     if (name.contains("flux"))

@@ -780,6 +780,11 @@ private slots:
         mode->setCurrentIndex(mode->findData("normal"));
         QString error;
         QCOMPARE(panel.input(QRect(0, 0, 8, 8), {}, &error)["controls"].toArray().size(), 0);
+        panel.setArchitecture("MOSS-Image");
+        for (const auto& name : { "reference", "depth", "scribble" }) {
+            mode->setCurrentIndex(mode->findData(name));
+            QCOMPARE(panel.input(QRect(0, 0, 8, 8), {}, &error)["controls"].toArray().size(), 0);
+        }
     }
     void addControlReusesLastModeAndActiveLayer() {
         class Host : public CanvasHost {

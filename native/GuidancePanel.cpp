@@ -294,9 +294,10 @@ public:
         const bool reference = QStringList { "reference", "style", "composition", "face" }.contains(mode);
         const bool instruction = architecture == "qwen2" || architecture == "krea2" || architecture.startsWith("flux2_")
             || architecture == "flux_k" || architecture == "qwen_l" || architecture.startsWith("qwen_e");
-        supported = !instruction || reference
+        // MOSS-Image has no ControlNet, IP-Adapter or reference input
+        supported = architecture != "moss" && (!instruction || reference
             || ((architecture == "qwen2" || architecture.startsWith("flux2_"))
-                && QStringList { "scribble", "line_art", "canny_edge", "depth", "pose" }.contains(mode));
+                && QStringList { "scribble", "line_art", "canny_edge", "depth", "pose" }.contains(mode)));
         preset->setVisible(supported && !instruction);
         extend->setVisible(supported && !instruction);
         layer->setVisible(supported);
@@ -667,6 +668,7 @@ void GuidancePanel::setArchitecture(const QString& family) {
     else if (arch == "sd1.5" || arch == "sd 1.5") arch = "sd15";
     else if (arch == "qwen21" || arch == "qwen-image21" || arch == "qwen image 2.1") arch = "qwen2";
     else if (arch == "krea 2") arch = "krea2";
+    else if (arch == "moss-image" || arch == "moss image" || arch == "moss_image") arch = "moss";
     else if (arch == "flux 2 klein 9b") arch = "flux2_9b";
     else if (arch == "flux 2 klein 4b") arch = "flux2_4b";
     if (arch == m_architecture) return;
