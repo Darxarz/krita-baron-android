@@ -335,6 +335,15 @@
     "Image saved.": "Image saved.",
     "Visit Website": "Visit Website",
     "Control map": "Control map",
-    "Reference fidelity": "Reference fidelity"
+    "Reference fidelity": "Reference fidelity",
+    "Krea 2: Reference placement": "Krea 2: Penempatan referensi",
+    "Aligned with canvas": "Sejajar dengan kanvas",
+    "Beside canvas (restaging)": "Di samping kanvas (komposisi baru)",
+    "Bag of features (experimental)": "Kumpulan fitur (eksperimental)",
+    "Reference placement": "Penempatan referensi",
+    "Krea 2 Edit requires exactly one enabled Identity or General Edit LoRA": "Krea 2 Edit memerlukan tepat satu LoRA Identity atau General Edit yang aktif",
+    "Choose a Krea 2 Edit LoRA matching the selected reference purpose": "Pilih LoRA Krea 2 Edit yang sesuai dengan tujuan referensi",
+    "Unknown Krea 2 reference placement": "Penempatan referensi Krea 2 tidak dikenal",
+    "Krea 2 Edit V2 requires ComfyUI-Krea2Edit 2.0 or newer; update the nodes and restart ComfyUI": "Krea 2 Edit V2 memerlukan ComfyUI-Krea2Edit 2.0 atau lebih baru; perbarui node dan mulai ulang ComfyUI"
   }
 }

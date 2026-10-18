@@ -346,6 +346,15 @@
     "Image saved.": "Image saved.",
     "Visit Website": "Visit Website",
     "Control map": "Control map",
-    "Reference fidelity": "Reference fidelity"
+    "Reference fidelity": "Reference fidelity",
+    "Krea 2: Reference placement": "Krea 2: 参照の配置",
+    "Aligned with canvas": "キャンバスに揃える",
+    "Beside canvas (restaging)": "キャンバスの隣（構図変更）",
+    "Bag of features (experimental)": "特徴の集合（実験的）",
+    "Reference placement": "参照の配置",
+    "Krea 2 Edit requires exactly one enabled Identity or General Edit LoRA": "Krea 2 Edit では有効な Identity または General Edit LoRA がちょうど1つ必要です",
+    "Choose a Krea 2 Edit LoRA matching the selected reference purpose": "選択した参照の目的に合う Krea 2 Edit LoRA を選んでください",
+    "Unknown Krea 2 reference placement": "不明な Krea 2 参照配置です",
+    "Krea 2 Edit V2 requires ComfyUI-Krea2Edit 2.0 or newer; update the nodes and restart ComfyUI": "Krea 2 Edit V2 には ComfyUI-Krea2Edit 2.0 以降が必要です。ノードを更新して ComfyUI を再起動してください"
   }
 }

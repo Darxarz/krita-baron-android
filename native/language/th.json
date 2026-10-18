@@ -307,6 +307,15 @@
     "Visit Website": "Visit Website",
     "Control map": "Control map",
     "Info to Clipboard": "Info to Clipboard",
-    "Reference fidelity": "Reference fidelity"
+    "Reference fidelity": "Reference fidelity",
+    "Krea 2: Reference placement": "Krea 2: การจัดวางภาพอ้างอิง",
+    "Aligned with canvas": "จัดแนวกับผืนผ้าใบ",
+    "Beside canvas (restaging)": "ข้างผืนผ้าใบ (จัดองค์ประกอบใหม่)",
+    "Bag of features (experimental)": "ชุดคุณลักษณะ (ทดลอง)",
+    "Reference placement": "การจัดวางภาพอ้างอิง",
+    "Krea 2 Edit requires exactly one enabled Identity or General Edit LoRA": "Krea 2 Edit ต้องเปิดใช้ LoRA Identity หรือ General Edit เพียงหนึ่งรายการ",
+    "Choose a Krea 2 Edit LoRA matching the selected reference purpose": "เลือก LoRA Krea 2 Edit ที่ตรงกับวัตถุประสงค์ของภาพอ้างอิง",
+    "Unknown Krea 2 reference placement": "ไม่รู้จักการจัดวางภาพอ้างอิง Krea 2",
+    "Krea 2 Edit V2 requires ComfyUI-Krea2Edit 2.0 or newer; update the nodes and restart ComfyUI": "Krea 2 Edit V2 ต้องใช้ ComfyUI-Krea2Edit 2.0 ขึ้นไป โปรดอัปเดตโหนดและเริ่ม ComfyUI ใหม่"
   }
 }

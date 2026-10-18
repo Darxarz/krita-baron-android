@@ -306,8 +306,12 @@ def compile_request(payload):
             raise ValueError("Style VAE is not installed on this server")
         style.vae = vae
         purpose = data.get("reference_purpose", "identity")
-        if purpose not in ("identity", "style"):
+        if purpose not in ("identity", "identity_v2", "general_v2", "style"):
             raise ValueError("Invalid reference purpose")
+        placement = data.get("reference_placement", "auto")
+        if placement not in ("auto", "aligned (trained)", "beside (right of target)", "bag of features"):
+            raise ValueError("Invalid reference placement")
+        style.krea2_ref_position = placement
         style.krea2_reference_mode = purpose
         style.krea2_ref_boost = number(data, "reference_fidelity", 4, 0, 12)
         style.krea2_grounding_px = integer(data, "reference_detail", 768, 512, 1024)

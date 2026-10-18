@@ -550,13 +550,18 @@ def _edit_references(w: ComfyWorkflow, cond: Conditioning, image: Output | None,
 
 def _is_krea_edit_lora(name: str):
     filename = name.replace("\\", "/").rsplit("/", 1)[-1].lower()
-    return filename.startswith("krea2_identity_edit_v1") and filename.endswith(".safetensors")
+    return filename.startswith((
+        "krea2_identity_edit_v",
+        "krea2_general_edit_v2",
+    )) and filename.endswith(".safetensors")
 
 
 def _krea_edit_lora(checkpoint: CheckpointInput):
     selected = [l for l in checkpoint.loras if _is_krea_edit_lora(l.name) and l.strength > 0]
     if len(selected) != 1:
-        raise RuntimeError(_("Krea 2 Edit requires exactly one enabled Krea 2 Identity Edit LoRA"))
+        raise RuntimeError(
+            _("Krea 2 Edit requires exactly one enabled Identity or General Edit LoRA")
+        )
     return selected[0]
 
 
@@ -565,7 +570,7 @@ def _prepare_krea_edit(checkpoint: CheckpointInput, cond: ConditioningInput, mod
     references = sum(c.mode.is_ip_adapter for c in controls) + int(cond.edit_reference)
     if checkpoint.version is not Arch.krea2 or references == 0:
         return False
-    if checkpoint.krea2_reference_mode not in ["identity", "style"]:
+    if checkpoint.krea2_reference_mode not in ["identity", "identity_v2", "general_v2", "style"]:
         raise RuntimeError(_("Unknown Krea 2 reference purpose"))
     style_reference = checkpoint.krea2_reference_mode == "style"
     max_references = 3 if style_reference else 2
@@ -573,9 +578,7 @@ def _prepare_krea_edit(checkpoint: CheckpointInput, cond: ConditioningInput, mod
         raise RuntimeError(
             _(
                 "Krea 2 {purpose} supports {count} references, including the source canvas",
-                purpose=_("Identity")
-                if checkpoint.krea2_reference_mode == "identity"
-                else _("Style"),
+                purpose=_("Identity") if not style_reference else _("Style"),
                 count=max_references,
             )
         )
@@ -623,13 +626,20 @@ def _prepare_krea_edit(checkpoint: CheckpointInput, cond: ConditioningInput, mod
             _("Choose either Krea 2 Identity Edit or Style Reference LoRA for this workflow")
         )
     if not any(_is_krea_edit_lora(l.name) for l in checkpoint.loras):
-        for filename in [
-            "krea2_identity_edit_v1_2_r128.safetensors",
-            "krea2_identity_edit_v1_2_r64.safetensors",
-            "krea2_identity_edit_v1_2.safetensors",
-            "krea2_identity_edit_v1_1.safetensors",
-            "krea2_identity_edit_v1.safetensors",
-        ]:
+        if checkpoint.krea2_reference_mode in ("identity_v2", "general_v2"):
+            family = "general" if checkpoint.krea2_reference_mode == "general_v2" else "identity"
+            filenames = [
+                f"krea2_{family}_edit_v2{rank}.safetensors" for rank in ("_r128", "_r64", "")
+            ]
+        else:
+            filenames = [
+                "krea2_identity_edit_v1_2_r128.safetensors",
+                "krea2_identity_edit_v1_2_r64.safetensors",
+                "krea2_identity_edit_v1_2.safetensors",
+                "krea2_identity_edit_v1_1.safetensors",
+                "krea2_identity_edit_v1.safetensors",
+            ]
+        for filename in filenames:
             found = next(
                 (
                     name
@@ -641,7 +651,29 @@ def _prepare_krea_edit(checkpoint: CheckpointInput, cond: ConditioningInput, mod
             if found:
                 checkpoint.loras.append(LoraInput(found, 1.0))
                 break
-    _krea_edit_lora(checkpoint)
+    selected = _krea_edit_lora(checkpoint)
+    filename = selected.name.replace("\\", "/").rsplit("/", 1)[-1].lower()
+    if checkpoint.krea2_reference_mode in ("identity_v2", "general_v2"):
+        family = "general" if checkpoint.krea2_reference_mode == "general_v2" else "identity"
+        if not filename.startswith(f"krea2_{family}_edit_v2"):
+            raise RuntimeError(
+                _("Choose a Krea 2 Edit LoRA matching the selected reference purpose")
+            )
+    if "_edit_v2" in filename:
+        if checkpoint.krea2_ref_position not in (
+            "auto",
+            "aligned (trained)",
+            "beside (right of target)",
+            "bag of features",
+        ):
+            raise RuntimeError(_("Unknown Krea 2 reference placement"))
+        inputs = models.node_inputs.inputs("Krea2EditModelPatch") or {}
+        if "ref_position" not in inputs or "ref_position_a" not in inputs:
+            raise RuntimeError(
+                _(
+                    "Krea 2 Edit V2 requires ComfyUI-Krea2Edit 2.0 or newer; update the nodes and restart ComfyUI"
+                )
+            )
     return True
 
 
@@ -675,11 +707,26 @@ def apply_krea_edit(
             _("Krea 2 Identity Edit supports two references, including the source canvas")
         )
     lora = _krea_edit_lora(checkpoint)
-    fit = "fit" if "v1_2" in lora.name.lower() else "crop (legacy)"
+    fit = (
+        "fit"
+        if any(version in lora.name.lower() for version in ("v1_2", "_edit_v2"))
+        else "crop (legacy)"
+    )
     boost = max(0.0, min(checkpoint.krea2_ref_boost, 10.0))
     if not cond.edit_reference:
         boost = min(boost, 1.0)
-    return w.patch_krea2_edit(model, vae, refs, target_latent, fit, boost)
+    positions = None
+    if "_edit_v2" in lora.name.lower():
+        identity = "identity_edit_v2" in lora.name.lower()
+        position = checkpoint.krea2_ref_position
+        if position == "auto":
+            position = (
+                "beside (right of target)"
+                if identity and (len(refs) == 2 or not cond.edit_reference)
+                else "aligned (trained)"
+            )
+        positions = (position, "aligned (trained)")
+    return w.patch_krea2_edit(model, vae, refs, target_latent, fit, boost, positions)
 
 
 def encode_prompt(

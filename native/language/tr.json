@@ -344,6 +344,15 @@
     "Image saved.": "Image saved.",
     "Visit Website": "Visit Website",
     "Control map": "Control map",
-    "Reference fidelity": "Reference fidelity"
+    "Reference fidelity": "Reference fidelity",
+    "Krea 2: Reference placement": "Krea 2: Referans yerleşimi",
+    "Aligned with canvas": "Tuvalle hizalı",
+    "Beside canvas (restaging)": "Tuvalin yanında (yeni kompozisyon)",
+    "Bag of features (experimental)": "Özellik kümesi (deneysel)",
+    "Reference placement": "Referans yerleşimi",
+    "Krea 2 Edit requires exactly one enabled Identity or General Edit LoRA": "Krea 2 Edit için tam olarak bir etkin Identity veya General Edit LoRA gerekir",
+    "Choose a Krea 2 Edit LoRA matching the selected reference purpose": "Seçili referans amacına uygun bir Krea 2 Edit LoRA seçin",
+    "Unknown Krea 2 reference placement": "Bilinmeyen Krea 2 referans yerleşimi",
+    "Krea 2 Edit V2 requires ComfyUI-Krea2Edit 2.0 or newer; update the nodes and restart ComfyUI": "Krea 2 Edit V2 için ComfyUI-Krea2Edit 2.0 veya üstü gerekir; düğümleri güncelleyip ComfyUI uygulamasını yeniden başlatın"
   }
 }

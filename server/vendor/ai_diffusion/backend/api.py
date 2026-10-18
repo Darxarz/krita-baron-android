@@ -70,6 +70,7 @@ class CheckpointInput:
     krea2_reference_mode: str = "identity"
     krea2_ref_boost: float = 4.0
     krea2_grounding_px: int = 768
+    krea2_ref_position: str = "auto"
 
 
 @dataclass

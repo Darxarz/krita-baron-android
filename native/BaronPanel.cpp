@@ -619,7 +619,10 @@ BaronPanel::BaronPanel(CanvasHost* host, QWidget* parent, PromptEditor::Completi
     auto kreaForm = section(referenceForm, tr("Krea 2 reference settings"));
     m_referencePurpose = new QComboBox(generation);
     m_referencePurpose->addItem(tr("Identity"), "identity");
+    m_referencePurpose->addItem(tr("Identity Edit V2"), "identity_v2");
+    m_referencePurpose->addItem(tr("General Edit V2"), "general_v2");
     m_referencePurpose->addItem(tr("Style"), "style");
+    m_referencePurpose->setObjectName("referencePurpose");
     kreaForm->addRow(tr("Reference purpose"), m_referencePurpose);
     m_fidelity = new QDoubleSpinBox(generation);
     m_fidelity->setRange(0, 12);
@@ -630,6 +633,13 @@ BaronPanel::BaronPanel(CanvasHost* host, QWidget* parent, PromptEditor::Completi
         m_referenceDetail->addItem(QString::number(detail), detail);
     m_referenceDetail->setCurrentIndex(1);
     kreaForm->addRow(tr("Reference detail"), m_referenceDetail);
+    m_referencePlacement = new QComboBox(generation);
+    m_referencePlacement->setObjectName("referencePlacement");
+    m_referencePlacement->addItem(tr("Automatic"), "auto");
+    m_referencePlacement->addItem(tr("Aligned with canvas"), "aligned (trained)");
+    m_referencePlacement->addItem(tr("Beside canvas (restaging)"), "beside (right of target)");
+    m_referencePlacement->addItem(tr("Bag of features (experimental)"), "bag of features");
+    kreaForm->addRow(tr("Reference placement"), m_referencePlacement);
     connect(m_model, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this] {
         const auto name = m_model->currentData().toString().toLower();
         if (name.contains("krea")) {
@@ -1298,9 +1308,11 @@ BaronPanel::BaronPanel(CanvasHost* host, QWidget* parent, PromptEditor::Completi
     kreaForm->removeWidget(m_referencePurpose);
     kreaForm->removeWidget(m_fidelity);
     kreaForm->removeWidget(m_referenceDetail);
+    kreaForm->removeWidget(m_referencePlacement);
     kreaStyle->addRow(tr("Reference purpose"), m_referencePurpose);
     kreaStyle->addRow(tr("Reference fidelity"), m_fidelity);
     kreaStyle->addRow(tr("Reference detail"), m_referenceDetail);
+    kreaStyle->addRow(tr("Reference placement"), m_referencePlacement);
     kreaForm->parentWidget()->hide();
     if (auto header = qobject_cast<QWidget*>(kreaForm->parentWidget()->property("sectionHeader").value<QObject*>()))
         header->hide();
@@ -1666,7 +1678,7 @@ BaronPanel::BaronPanel(CanvasHost* host, QWidget* parent, PromptEditor::Completi
     connect(m_prompt, &QPlainTextEdit::textChanged, this, changed);
     connect(m_negative, &QPlainTextEdit::textChanged, this, changed);
     for (auto combo : { m_mode, m_model, m_sampler, m_scheduler, m_queuePosition,
-             m_referencePurpose, m_referenceDetail })
+             m_referencePurpose, m_referenceDetail, m_referencePlacement })
         connect(combo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, changed);
     for (auto spin : { m_steps, m_batch })
         connect(spin, QOverload<int>::of(&QSpinBox::valueChanged), this, changed);
@@ -1809,6 +1821,7 @@ void BaronPanel::captureStyleBank() {
         { "prompt_mode", m_promptSyntax->currentData().toString() }, { "a1111_gpu_noise", m_gpuNoise->isChecked() },
         { "a1111_ensd", m_ensd->text() }, { "loras", loras },
         { "reference_purpose", m_referencePurpose->currentData().toString() },
+        { "reference_placement", m_referencePlacement->currentData().toString() },
         { "reference_fidelity", m_fidelity->value() }, { "reference_detail", m_referenceDetail->currentData().toInt() } };
     for (const auto& preset : m_stylePresets)
         if (preset["id"] == m_styleId) {
@@ -1868,6 +1881,7 @@ void BaronPanel::restoreStyleBank(const QString& previous) {
         m_gpuNoise->setChecked(bank["a1111_gpu_noise"].toBool());
         m_ensd->setText(bank["a1111_ensd"].toString("0"));
         m_referencePurpose->setCurrentIndex(qMax(0, m_referencePurpose->findData(bank["reference_purpose"].toString("identity"))));
+        m_referencePlacement->setCurrentIndex(qMax(0, m_referencePlacement->findData(bank["reference_placement"].toString("auto"))));
         m_fidelity->setValue(bank["reference_fidelity"].toDouble(4));
         m_referenceDetail->setCurrentIndex(qMax(0, m_referenceDetail->findData(bank["reference_detail"].toInt(768))));
         m_loras->clear();
@@ -1995,6 +2009,7 @@ QJsonObject BaronPanel::input(bool pixels) {
         data["a1111_ensd"] = double(m_gpuNoise->isChecked() ? ensd : 0);
     }
     data["reference_purpose"] = m_referencePurpose->currentData().toString();
+    data["reference_placement"] = m_referencePlacement->currentData().toString();
     const QSettings performance("BaronEdition", "Orchestrion");
     data["resolution_multiplier"] = m_scale->value() == 1
         ? performance.value("performanceResolutionMultiplier", 1).toDouble() : m_scale->value();
@@ -2423,6 +2438,7 @@ void BaronPanel::flushDocumentState() {
         { "upscale_options", m_upscale->state() },
         { "inpaint_options", m_inpaint->state() }, {"inpaint_mode",m_inpaintMode},
         { "reference_purpose", m_referencePurpose->currentData().toString() },
+        { "reference_placement", m_referencePlacement->currentData().toString() },
         { "reference_fidelity", m_fidelity->value() },
         { "reference_detail", m_referenceDetail->currentData().toInt() } };
     capturePromptBank();
@@ -2502,6 +2518,7 @@ void BaronPanel::restoreDocumentState() {
         select(m_sampler, data["sampler"]);
         select(m_scheduler, data["scheduler"]);
         select(m_referencePurpose, data["reference_purpose"]);
+    select(m_referencePlacement, data["reference_placement"].toString("auto"));
         select(m_referenceDetail, data["reference_detail"]);
         m_steps->setValue(data["steps"].toInt(20));
         m_cfg->setValue(data["cfg"].toDouble(4));
@@ -2858,6 +2875,7 @@ QJsonObject BaronPanel::generationSettings() const {
         { "upscale_options", m_upscale->state() },
         { "inpaint_options", m_inpaint->state() }, {"inpaint_mode",m_inpaintMode},
         { "reference_purpose", m_referencePurpose->currentData().toString() },
+        { "reference_placement", m_referencePlacement->currentData().toString() },
         { "reference_fidelity", m_fidelity->value() },
         { "reference_detail", m_referenceDetail->currentData().toInt() } };
 }
@@ -2889,6 +2907,7 @@ void BaronPanel::restoreGenerationSettings(const QJsonObject& data) {
     m_upscaleFactor->setValue(data["upscale"].toDouble(2));
     if (data["upscale_options"].isObject()) m_upscale->restore(data["upscale_options"].toObject());
     select(m_referencePurpose, data["reference_purpose"]);
+    select(m_referencePlacement, data["reference_placement"].toString("auto"));
     select(m_referenceDetail, data["reference_detail"]);
     m_fidelity->setValue(data["reference_fidelity"].toDouble(4));
     m_loras->clear();
@@ -3211,6 +3230,7 @@ void BaronPanel::selectStyle() {
         m_referencePurpose->setCurrentIndex(qMax(0, m_referencePurpose->findData(style["krea2_reference_mode"].toString("identity"))));
         m_fidelity->setValue(style["krea2_ref_boost"].toDouble(4));
         m_referenceDetail->setCurrentIndex(qMax(0, m_referenceDetail->findData(style["krea2_grounding_px"].toInt(768))));
+        m_referencePlacement->setCurrentIndex(qMax(0, m_referencePlacement->findData(style["krea2_ref_position"].toString("auto"))));
         auto sampler = style["sampler_settings"].toObject();
         if (sampler.isEmpty()) {
             QFile presets(":/baron/presets/samplers.json");
@@ -3282,6 +3302,7 @@ void BaronPanel::saveStyle() {
         m_styleBanks["edits"] = edits;
     }
     preset["krea2_reference_mode"] = m_referencePurpose->currentData().toString();
+    preset["krea2_ref_position"] = m_referencePlacement->currentData().toString();
     preset["krea2_ref_boost"] = m_fidelity->value();
     preset["krea2_grounding_px"] = m_referenceDetail->currentData().toInt();
     preset["style_prompt"]

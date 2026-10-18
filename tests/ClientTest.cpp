@@ -2662,6 +2662,35 @@ private slots:
         QVERIFY(styles->currentData().toString() != editId);
         QCOMPARE(panel.findChild<PromptEditor*>("stylePrompt")->toPlainText(), QString("watercolor"));
     }
+    void kreaV2SettingsSurviveDocumentSwitchAndRestart() {
+        class Host : public CanvasHost {
+        public:
+            QString id = QUuid::createUuid().toString();
+            QJsonObject state;
+            CanvasSnapshot capture(bool, QString*) override { return {}; }
+            bool apply(const QString&, const QImage&, const QImage&, const QString&, QString*) override { return false; }
+            QString documentId() const override { return id; }
+            QJsonObject documentState() const override { return state; }
+            void saveDocumentState(const QJsonObject& value) override { state = value; }
+        } host;
+        {
+            BaronPanel panel(&host);
+            auto purpose = panel.findChild<QComboBox*>("referencePurpose");
+            auto placement = panel.findChild<QComboBox*>("referencePlacement");
+            QVERIFY(purpose && placement);
+            QVERIFY(purpose->findData("identity") >= 0);
+            QVERIFY(purpose->findData("identity_v2") >= 0);
+            purpose->setCurrentIndex(purpose->findData("general_v2"));
+            placement->setCurrentIndex(placement->findData("beside (right of target)"));
+            panel.flushDocumentState();
+            QCOMPARE(host.state["reference_purpose"].toString(), QString("general_v2"));
+            QCOMPARE(host.state["reference_placement"].toString(), QString("beside (right of target)"));
+        }
+        BaronPanel reopened(&host);
+        reopened.documentChanged();
+        QCOMPARE(reopened.findChild<QComboBox*>("referencePurpose")->currentData().toString(), QString("general_v2"));
+        QCOMPARE(reopened.findChild<QComboBox*>("referencePlacement")->currentData().toString(), QString("beside (right of target)"));
+    }
     void generationAndEditPromptsSurviveSwitchesDocumentsAndRestart() {
         class Host : public CanvasHost {
         public:

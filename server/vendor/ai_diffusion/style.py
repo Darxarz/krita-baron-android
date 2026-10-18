@@ -98,7 +98,14 @@ class StyleSettings:
     )
 
     krea2_reference_mode = Setting(
-        _("Krea 2: Reference purpose"), "identity", items=["identity", "style"]
+        _("Krea 2: Reference purpose"),
+        "identity",
+        items=["identity", "identity_v2", "general_v2", "style"],
+    )
+    krea2_ref_position = Setting(
+        _("Krea 2: Reference placement"),
+        "auto",
+        items=["auto", "aligned (trained)", "beside (right of target)", "bag of features"],
     )
     krea2_ref_boost = Setting(
         _("Krea 2: Reference fidelity"),
@@ -170,6 +177,7 @@ class Style(QObject):
     krea2_reference_mode: str = StyleSettings.krea2_reference_mode.default
     krea2_ref_boost: float = StyleSettings.krea2_ref_boost.default
     krea2_grounding_px: int = StyleSettings.krea2_grounding_px.default
+    krea2_ref_position: str = StyleSettings.krea2_ref_position.default
     sampler: str = StyleSettings.sampler.default
     prompt_mode: str = StyleSettings.prompt_mode.default
     a1111_gpu_noise: bool = StyleSettings.a1111_gpu_noise.default
@@ -270,6 +278,7 @@ class Style(QObject):
             krea2_reference_mode=self.krea2_reference_mode,
             krea2_ref_boost=self.krea2_ref_boost,
             krea2_grounding_px=self.krea2_grounding_px,
+            krea2_ref_position=self.krea2_ref_position,
         )
 
     def get_steps(self, is_live: bool) -> tuple[int, int]:

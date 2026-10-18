@@ -176,6 +176,32 @@ class EngineTests(unittest.TestCase):
                 if model == self.krea:
                     self.assertTrue(any("lora_name" in node["inputs"] for node in graph.values()))
 
+    def test_krea_v2_adapter_and_reference_placement(self):
+        import copy
+
+        for purpose in ("identity_v2", "general_v2"):
+            info = copy.deepcopy(self.info)
+            family = "identity" if purpose == "identity_v2" else "general"
+            adapter = f"krea_v2/krea2_{family}_edit_v2_r128.safetensors"
+            info["LoraLoader"]["input"]["required"]["lora_name"][0].append(adapter)
+            info["Krea2EditModelPatch"]["input"].setdefault("optional", {}).update(
+                {key: [["aligned (trained)", "beside (right of target)", "bag of features"]]
+                 for key in ("ref_position", "ref_position_a")}
+            )
+            request = {"mode": "edit", "model": self.krea, "image": image(), "width": 512, "height": 512,
+                       "reference_purpose": purpose, "reference_placement": "beside (right of target)"}
+            graph = compile_request({"request": request, "object_info": info,
+                                     "diffusion_models": self.metadata})["prompt"]
+            patch = next(n["inputs"] for n in graph.values() if n["class_type"] == "Krea2EditModelPatch")
+            self.assertEqual(patch["ref_position"], "beside (right of target)")
+            self.assertEqual(patch["fit_mode"], "fit")
+            self.assertTrue(any(n["inputs"].get("lora_name") == adapter for n in graph.values()))
+
+    def test_invalid_reference_purpose_or_placement_is_rejected(self):
+        for options in ({"reference_purpose": "missing"}, {"reference_placement": "missing"}):
+            with self.assertRaisesRegex(ValueError, "Invalid reference"):
+                self.compile({"mode": "edit", "model": self.krea, "image": image(), **options})
+
     def test_background_is_person_only_with_chair_excluded(self):
         graph = self.compile({"mode": "background", "image": image()})
         classes = [node["class_type"] for node in graph.values()]

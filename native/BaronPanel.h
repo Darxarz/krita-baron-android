@@ -168,7 +168,7 @@ private:
     GuidancePanel* m_guidance;
     QComboBox *m_sampler, *m_scheduler, *m_queuePosition;
     QCheckBox* m_fixedSeed;
-    QComboBox *m_referencePurpose, *m_referenceDetail;
+    QComboBox *m_referencePurpose, *m_referenceDetail, *m_referencePlacement;
     QComboBox* m_catalogKind;
     QLabel *m_account, *m_price, *m_status, *m_preview;
     QListWidget *m_gallery, *m_refs, *m_loras, *m_results;

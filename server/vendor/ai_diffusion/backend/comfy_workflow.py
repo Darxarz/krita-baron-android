@@ -740,6 +740,7 @@ class ComfyWorkflow:
         target_latent: Output,
         fit_mode: str = "fit",
         ref_boost: float = 1.0,
+        positions: tuple[str, str] | None = None,
     ):
         # The pixel path overrides source_latent. Reuse the target for the required
         # placeholder and pre-encode references before the sampler loads the model.
@@ -755,6 +756,8 @@ class ComfyWorkflow:
         }
         if len(images) > 1:
             args["source_image_b"] = images[1]
+        if positions:
+            args["ref_position"], args["ref_position_a"] = positions
         return self.add("Krea2EditModelPatch", 1, **args)
 
     def background_region(self, conditioning: Output):

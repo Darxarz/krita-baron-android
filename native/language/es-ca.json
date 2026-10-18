@@ -326,6 +326,15 @@
     "Image saved.": "Image saved.",
     "Visit Website": "Visit Website",
     "Control map": "Control map",
-    "Reference fidelity": "Reference fidelity"
+    "Reference fidelity": "Reference fidelity",
+    "Krea 2: Reference placement": "Krea 2: Posició de la referència",
+    "Aligned with canvas": "Alinear amb el llenç",
+    "Beside canvas (restaging)": "Al costat del llenç (nova composició)",
+    "Bag of features (experimental)": "Conjunt de característiques (experimental)",
+    "Reference placement": "Posició de la referència",
+    "Krea 2 Edit requires exactly one enabled Identity or General Edit LoRA": "Krea 2 Edit necessita exactament una LoRA Identity o General Edit activada",
+    "Choose a Krea 2 Edit LoRA matching the selected reference purpose": "Tria una LoRA Krea 2 Edit que coincideixi amb el propòsit de la referència",
+    "Unknown Krea 2 reference placement": "Posició de referència Krea 2 desconeguda",
+    "Krea 2 Edit V2 requires ComfyUI-Krea2Edit 2.0 or newer; update the nodes and restart ComfyUI": "Krea 2 Edit V2 necessita ComfyUI-Krea2Edit 2.0 o posterior; actualitza els nodes i reinicia ComfyUI"
   }
 }

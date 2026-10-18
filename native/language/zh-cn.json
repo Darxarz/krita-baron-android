@@ -346,6 +346,15 @@
     "Image saved.": "Image saved.",
     "Visit Website": "Visit Website",
     "Control map": "Control map",
-    "Reference fidelity": "Reference fidelity"
+    "Reference fidelity": "Reference fidelity",
+    "Krea 2: Reference placement": "Krea 2：参考图位置",
+    "Aligned with canvas": "与画布对齐",
+    "Beside canvas (restaging)": "画布旁边（重新构图）",
+    "Bag of features (experimental)": "特征集合（实验性）",
+    "Reference placement": "参考图位置",
+    "Krea 2 Edit requires exactly one enabled Identity or General Edit LoRA": "Krea 2 Edit 需要且只能启用一个 Identity 或 General Edit LoRA",
+    "Choose a Krea 2 Edit LoRA matching the selected reference purpose": "请选择与参考用途匹配的 Krea 2 Edit LoRA",
+    "Unknown Krea 2 reference placement": "未知的 Krea 2 参考图位置",
+    "Krea 2 Edit V2 requires ComfyUI-Krea2Edit 2.0 or newer; update the nodes and restart ComfyUI": "Krea 2 Edit V2 需要 ComfyUI-Krea2Edit 2.0 或更新版本；请更新节点并重启 ComfyUI"
   }
 }

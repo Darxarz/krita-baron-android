@@ -432,6 +432,15 @@
     "Selection Bounds": "Selection Bounds",
     "Pre-fill the selected region before diffusion": "Pre-fill the selected region before diffusion",
     "Add Content": "Add Content",
-    "Inpaint": "Inpaint"
+    "Inpaint": "Inpaint",
+    "Krea 2: Reference placement": "Krea 2: Reference placement",
+    "Aligned with canvas": "Aligned with canvas",
+    "Beside canvas (restaging)": "Beside canvas (restaging)",
+    "Bag of features (experimental)": "Bag of features (experimental)",
+    "Reference placement": "Reference placement",
+    "Krea 2 Edit requires exactly one enabled Identity or General Edit LoRA": "Krea 2 Edit requires exactly one enabled Identity or General Edit LoRA",
+    "Choose a Krea 2 Edit LoRA matching the selected reference purpose": "Choose a Krea 2 Edit LoRA matching the selected reference purpose",
+    "Unknown Krea 2 reference placement": "Unknown Krea 2 reference placement",
+    "Krea 2 Edit V2 requires ComfyUI-Krea2Edit 2.0 or newer; update the nodes and restart ComfyUI": "Krea 2 Edit V2 requires ComfyUI-Krea2Edit 2.0 or newer; update the nodes and restart ComfyUI"
   }
 }

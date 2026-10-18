@@ -318,6 +318,15 @@
     "Visit Website": "Visit Website",
     "Control map": "Control map",
     "Info to Clipboard": "Info to Clipboard",
-    "Reference fidelity": "Reference fidelity"
+    "Reference fidelity": "Reference fidelity",
+    "Krea 2: Reference placement": "Krea 2 : Position de la référence",
+    "Aligned with canvas": "Aligner sur le canevas",
+    "Beside canvas (restaging)": "À côté du canevas (nouvelle composition)",
+    "Bag of features (experimental)": "Ensemble de caractéristiques (expérimental)",
+    "Reference placement": "Position de la référence",
+    "Krea 2 Edit requires exactly one enabled Identity or General Edit LoRA": "Krea 2 Edit nécessite exactement une LoRA Identity ou General Edit activée",
+    "Choose a Krea 2 Edit LoRA matching the selected reference purpose": "Choisissez une LoRA Krea 2 Edit correspondant au rôle de la référence",
+    "Unknown Krea 2 reference placement": "Position de référence Krea 2 inconnue",
+    "Krea 2 Edit V2 requires ComfyUI-Krea2Edit 2.0 or newer; update the nodes and restart ComfyUI": "Krea 2 Edit V2 nécessite ComfyUI-Krea2Edit 2.0 ou ultérieur ; mettez à jour les nœuds et redémarrez ComfyUI"
   }
 }

@@ -432,6 +432,15 @@
     "Pre-fill the selected region before diffusion": "Предварительно заполнить выбранную область перед рассеиванием",
     "Add Content": "Добавить объект",
     "Inpaint": "Вписывание",
-    "Account: %1\\nTotal generated: %2\\nImage tokens remaining: %3": "Account: %1\\nTotal generated: %2\\nImage tokens remaining: %3"
+    "Account: %1\\nTotal generated: %2\\nImage tokens remaining: %3": "Account: %1\\nTotal generated: %2\\nImage tokens remaining: %3",
+    "Krea 2: Reference placement": "Krea 2: Расположение референса",
+    "Aligned with canvas": "Совместить с холстом",
+    "Beside canvas (restaging)": "Рядом с холстом (новая композиция)",
+    "Bag of features (experimental)": "Набор признаков (экспериментально)",
+    "Reference placement": "Расположение референса",
+    "Krea 2 Edit requires exactly one enabled Identity or General Edit LoRA": "Для Krea 2 Edit нужна ровно одна включённая LoRA Identity или General Edit",
+    "Choose a Krea 2 Edit LoRA matching the selected reference purpose": "Выберите LoRA Krea 2 Edit, соответствующую назначению референса",
+    "Unknown Krea 2 reference placement": "Неизвестное расположение референса Krea 2",
+    "Krea 2 Edit V2 requires ComfyUI-Krea2Edit 2.0 or newer; update the nodes and restart ComfyUI": "Для Krea 2 Edit V2 нужны узлы ComfyUI-Krea2Edit 2.0 или новее; обновите их и перезапустите ComfyUI"
   }
 }
