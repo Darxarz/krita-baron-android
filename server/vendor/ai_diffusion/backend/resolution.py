@@ -156,6 +156,7 @@ class CheckpointResolution(NamedTuple):
                 Arch.sdxl: (640, 1280, 800**2, 1024**2),
                 Arch.sd3: (512, 1536, 512**2, 1536**2),
                 Arch.moss: (512, 2048, 512**2, 2048**2),
+                Arch.flux3: (512, 2048, 512**2, 2048**2),
             }
             default = (256, 2048, 512**2, 2048**2)
             if inpaint:

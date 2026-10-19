@@ -95,6 +95,7 @@ class Arch(Enum):
     ernie = "ERNIE Image"
     krea2 = "Krea 2"
     moss = "MOSS-Image"
+    flux3 = "FLUX 3 Klein"
 
     auto = "Automatic"
     all = "All"
@@ -147,6 +148,8 @@ class Arch(Enum):
             return Arch.krea2
         if string in {"moss-image", "moss_image", "moss"}:
             return Arch.moss
+        if string in {"flux3-klein", "flux3_klein", "flux3"}:
+            return Arch.flux3
         return None
 
     @staticmethod
@@ -193,8 +196,16 @@ class Arch(Enum):
 
     @property
     def supports_regions(self):
-        # MOSS-Image: regions become a layout JSON prompt instead of attention masks
-        return self in [Arch.sd15, Arch.sdxl, Arch.illu, Arch.illu_v, Arch.anima, Arch.moss]
+        # MOSS-Image, FLUX 3: regions become a layout JSON prompt instead of attention masks
+        return self in [
+            Arch.sd15,
+            Arch.sdxl,
+            Arch.illu,
+            Arch.illu_v,
+            Arch.anima,
+            Arch.moss,
+            Arch.flux3,
+        ]
 
     @property
     def supports_lcm(self):
@@ -222,7 +233,7 @@ class Arch(Enum):
 
     @property
     def supports_edit(self):  # includes text-to-image models that can also edit
-        return self.is_edit or self.is_flux2 or self in [Arch.qwen2, Arch.krea2]
+        return self.is_edit or self.is_flux2 or self in [Arch.qwen2, Arch.krea2, Arch.flux3]
 
     @property
     def is_sdxl_like(self):
@@ -272,6 +283,8 @@ class Arch(Enum):
                 return ["qwen_3vl_4b"]
             case Arch.moss:
                 return ["qwen_3_5_9b"]
+            case Arch.flux3:
+                return ["qwen_3vl_4b"]
             case _:
                 raise ValueError(f"Unsupported architecture: {self}")
 
@@ -298,6 +311,7 @@ class Arch(Enum):
             Arch.ernie,
             Arch.krea2,
             Arch.moss,
+            Arch.flux3,
         ]
 
 
@@ -443,7 +457,7 @@ class ControlMode(Enum):
         """True if this control mode is covered by instruction-following edit models."""
         if arch is Arch.krea2:
             return self in [ControlMode.style, ControlMode.composition, ControlMode.face]
-        if arch.is_flux2 or arch is Arch.qwen2:
+        if arch.is_flux2 or arch in (Arch.qwen2, Arch.flux3):
             return self in [
                 ControlMode.style,
                 ControlMode.composition,
@@ -870,6 +884,7 @@ search_paths: dict[str, list[str]] = {
     resource_id(ResourceKind.vae, Arch.ernie, "default"): ["flux2"],
     resource_id(ResourceKind.vae, Arch.krea2, "default"): ["qwen_image"],
     resource_id(ResourceKind.vae, Arch.moss, "default"): ["flux2"],
+    resource_id(ResourceKind.vae, Arch.flux3, "default"): ["flux2"],
 }
 # fmt: on
 
@@ -911,6 +926,8 @@ required_resource_ids = {
     ResourceId(ResourceKind.vae, Arch.krea2, "default"),
     ResourceId(ResourceKind.text_encoder, Arch.moss, "qwen_3_5_9b"),
     ResourceId(ResourceKind.vae, Arch.moss, "default"),
+    ResourceId(ResourceKind.text_encoder, Arch.flux3, "qwen_3vl_4b"),
+    ResourceId(ResourceKind.vae, Arch.flux3, "default"),
 }
 
 recommended_resource_ids = [

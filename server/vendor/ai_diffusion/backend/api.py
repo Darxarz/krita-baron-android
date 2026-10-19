@@ -300,6 +300,8 @@ def _base_cost(arch: Arch):
         return 4
     if arch is Arch.moss:
         return 5
+    if arch is Arch.flux3:
+        return 4
     if arch is Arch.zimage:
         return 6
     return 1

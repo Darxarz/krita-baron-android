@@ -695,6 +695,194 @@ class EngineTests(unittest.TestCase):
         )
         self.assertIn("улица", layouts[0])  # ensure_ascii=False, like MOSSImageLayoutPrompt
 
+    flux3 = "flux3\\flux3-image-klein-int8-convrot.safetensors"
+    flux3_lora = "flux3\\Baron_Satyr_FLUX3.safetensors"
+
+    def flux3_server(self, clip_type=True, reference_node=True):
+        import copy
+
+        info = copy.deepcopy(self.info)
+        if reference_node:  # /object_info/ReferenceMultiLatent on ComfyUI 0.41.0, tooltips removed
+            megapixels = ["FLOAT", {"default": 1.0, "min": 0.01, "max": 16.0, "step": 0.01}]
+            resolution = [
+                {"key": "keep resolution", "inputs": {"required": {}}},
+                {"key": "resize", "inputs": {"required": {"megapixels": megapixels}}},
+            ]
+            images = {"input": {"required": {}, "optional": {"image": ["IMAGE", {}]}}}
+            info["ReferenceMultiLatent"] = {
+                "input": {
+                    "required": {
+                        "positive": ["CONDITIONING", {}],
+                        "resolution": ["COMFY_DYNAMICCOMBO_V3", {"options": resolution}],
+                    },
+                    "optional": {
+                        "negative": ["CONDITIONING", {}],
+                        "vae": ["VAE", {}],
+                        "images": [
+                            "COMFY_AUTOGROW_V3",
+                            {"template": {**images, "prefix": "image", "min": 1, "max": 100}},
+                        ],
+                    },
+                },
+                "output": ["CONDITIONING", "CONDITIONING", "LATENT"],
+                "output_name": ["positive", "negative", "empty_latent"],
+            }
+        required = lambda node: info[node]["input"]["required"]  # noqa: E731
+        required("UNETLoader")["unet_name"][0].append(self.flux3)
+        types = required("CLIPLoader")["type"][0]
+        if clip_type and "flux3" not in types:
+            types.append("flux3")
+        elif not clip_type and "flux3" in types:
+            types.remove("flux3")
+        required("LoraLoader")["lora_name"][0].append(self.flux3_lora)
+        # As reported by comfyui-tooling-nodes on ComfyUI 0.41.0
+        metadata = {**self.metadata, self.flux3: {"base_model": "flux3-klein", "is_inpaint": False}}
+        return info, metadata
+
+    def compile_flux3(self, request, clip_type=True, reference_node=True):
+        info, metadata = self.flux3_server(clip_type, reference_node)
+        payload = {"width": 1024, "height": 1024, "prompt": "a red fox in fresh snow", "seed": 7}
+        return compile_request(
+            {
+                "request": {**payload, "model": self.flux3, **request},
+                "object_info": info,
+                "diffusion_models": metadata,
+            }
+        )
+
+    def test_flux3_discovery_requires_flux3_clip_type(self):
+        for clip_type in (True, False):
+            with self.subTest(clip_type=clip_type):
+                info, metadata = self.flux3_server(clip_type)
+                result = compile_request(
+                    {
+                        "request": {"operation": "discover"},
+                        "object_info": info,
+                        "diffusion_models": metadata,
+                    }
+                )
+                names = {item["name"]: item for item in result["items"]}
+                if clip_type:
+                    self.assertEqual(names[self.flux3]["architecture"], "flux3")
+                else:
+                    self.assertNotIn(self.flux3, names)
+
+    def test_flux3_generate_uses_model_preset(self):
+        graph = self.compile_flux3({"mode": "generate", "negative": "blurry"})["prompt"]
+        nodes = {node["class_type"]: node["inputs"] for node in graph.values()}
+        self.assertEqual(nodes["UNETLoader"]["unet_name"], self.flux3)
+        self.assertEqual(nodes["CLIPLoader"]["clip_name"], "qwen3vl_4b_fp8_scaled.safetensors")
+        self.assertEqual(nodes["CLIPLoader"]["type"], "flux3")
+        self.assertEqual(nodes["VAELoader"]["vae_name"], "flux2-vae.safetensors")
+        self.assertIn("EmptyFlux2LatentImage", nodes)
+        self.assertEqual(nodes["KSamplerSelect"]["sampler_name"], "euler")
+        self.assertEqual(nodes["BasicScheduler"]["scheduler"], "simple")
+        self.assertEqual(nodes["BasicScheduler"]["steps"], 16)
+        self.assertNotIn("CFGGuider", nodes)  # CFG 1
+        self.assertIn("BasicGuider", nodes)
+        self.assertFalse(any(t.startswith("ModelSampling") for t in nodes))
+        texts = [n["inputs"]["text"] for n in graph.values() if n["class_type"] == "CLIPTextEncode"]
+        self.assertEqual(texts, ["a red fox in fresh snow"])  # no negative prompt
+
+    def test_flux3_cfg_override_zeroes_negative_and_model_only_lora(self):
+        request = {
+            "mode": "generate",
+            "steps": 24,
+            "cfg": 2,
+            "negative": "blurry",
+            "loras": [{"name": self.flux3_lora, "strength": 0.7}],
+        }
+        graph = self.compile_flux3(request)["prompt"]
+        nodes = list(graph.values())
+        scheduler = next(n["inputs"] for n in nodes if n["class_type"] == "BasicScheduler")
+        self.assertEqual(scheduler["steps"], 24)
+        guider = next(n["inputs"] for n in nodes if n["class_type"] == "CFGGuider")
+        self.assertAlmostEqual(guider["cfg"], 2)
+        self.assertEqual(graph[guider["negative"][0]]["class_type"], "ConditioningZeroOut")
+        loras = [n["inputs"] for n in nodes if n["class_type"] == "LoraLoaderModelOnly"]
+        self.assertEqual([(l["lora_name"], l["strength_model"]) for l in loras], [(self.flux3_lora, 0.7)])
+        self.assertFalse(any(n["class_type"] == "LoraLoader" for n in nodes))
+
+    def test_flux3_edit_references_use_reference_multi_latent(self):
+        request = {
+            "mode": "edit",
+            "width": 512,
+            "height": 512,
+            "image": image(),
+            "references": [image(), image()],
+            "prompt": "put the jacket from <ref_image_1> on the person in <ref_image_0>",
+        }
+        graph = self.compile_flux3(request)["prompt"]
+        refs = [n["inputs"] for n in graph.values() if n["class_type"] == "ReferenceMultiLatent"]
+        self.assertEqual(len(refs), 1)
+        self.assertEqual(refs[0]["resolution"], "resize")
+        self.assertAlmostEqual(refs[0]["resolution.megapixels"], 1.0)
+        images = sorted(k for k in refs[0] if k.startswith("images."))
+        self.assertEqual(images, ["images.image0", "images.image1", "images.image2"])
+        self.assertEqual(graph[refs[0]["negative"][0]]["class_type"], "ConditioningZeroOut")
+        self.assertFalse(any(n["class_type"] == "ReferenceLatent" for n in graph.values()))
+        texts = [n["inputs"]["text"] for n in graph.values() if n["class_type"] == "CLIPTextEncode"]
+        self.assertEqual(texts, [request["prompt"]])
+        with self.assertRaisesRegex(ValueError, "ReferenceMultiLatent"):
+            self.compile_flux3(request, reference_node=False)
+
+    def test_flux3_selection_uses_differential_diffusion_and_high_strength(self):
+        for mode, inpaint in (("generate", None), ("edit", {"mode": "custom", "fill": "neutral"})):
+            with self.subTest(mode=mode):
+                request = {"mode": mode, "width": 512, "height": 512, "image": image(),
+                           "mask": image(True), "instruction_edit": False, "strength": 0.4}
+                if inpaint:
+                    request["inpaint_options"] = inpaint
+                graph = self.compile_flux3(request)["prompt"]
+                types = {node["class_type"] for node in graph.values()}
+                self.assertIn("DifferentialDiffusion", types)
+                self.assertIn("SetLatentNoiseMask", types)
+                self.assertFalse(any("ControlNet" in t or "Fooocus" in t for t in types))
+                self.assertNotIn("ReferenceMultiLatent", types)
+                if mode == "edit":  # refine at 0.4 is raised to 0.9: 16 steps start at step 2
+                    scheduler = next(
+                        n["inputs"] for n in graph.values() if n["class_type"] == "BasicScheduler"
+                    )
+                    self.assertEqual(scheduler["steps"], 16)
+                    split = next(
+                        n["inputs"] for n in graph.values() if n["class_type"] == "SplitSigmas"
+                    )
+                    self.assertEqual(split["step"], 2)
+
+    def test_flux3_regions_become_layout_table(self):
+        def rect_mask(x0, y0, x1, y1):
+            value = QImage(1024, 1024, QImage.Format_Grayscale8)
+            value.fill(0)
+            for y in range(y0, y1):
+                for x in range(x0, x1):
+                    value.setPixel(x, y, qRgba(255, 255, 255, 255))
+            data = QBuffer()
+            data.open(QIODevice.OpenModeFlag.WriteOnly)
+            value.save(data, "PNG")
+            return base64.b64encode(bytes(data.data())).decode()
+
+        girl = "a red-haired girl in a green cloak"
+        sign = 'a wooden tavern sign that says "TAVERN"'
+        prompt = "улица в сумерках, <obj_1> под <obj_2>"
+        request = {
+            "mode": "generate",
+            "prompt": prompt,
+            "regions": [
+                {"id": "girl", "mask": rect_mask(40, 100, 460, 900), "prompt": girl},
+                {"id": "sign", "mask": rect_mask(560, 50, 960, 350), "prompt": f"text: {sign}"},
+            ],
+        }
+        graph = self.compile_flux3(request)["prompt"]
+        types = {node["class_type"] for node in graph.values()}
+        self.assertFalse(types & {"ETN_AttentionMask", "ETN_DefineRegion", "ETN_BackgroundRegion"})
+        texts = [n["inputs"]["text"] for n in graph.values() if n["class_type"] == "CLIPTextEncode"]
+        rows = [
+            {"id": "obj_1", "bbox": [98, 39, 879, 449], "desc": girl},
+            {"id": "obj_2", "bbox": [49, 547, 342, 938], "desc": sign},
+        ]
+        # Same text as ComfyUI's Flux3LayoutPrompt (json.dumps with ensure_ascii=False)
+        self.assertEqual(texts, [f"{prompt} {json.dumps(rows, ensure_ascii=False)}"])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -17,18 +17,18 @@
     "ai_diffusion/util.py": "6259aa6dd8b86bbdfe9e7cf71fef25353572c2febd505fbcc52f09feb78a5d39",
     "ai_diffusion/win32.py": "190b20f79d457bd2dcdc98f5eb3dea3b726f0cde71250b9f79aae6de40bdcc89",
     "ai_diffusion/__init__.py": "2312dbb1a1fe91b55cb9428ab1a83799a144ef0241061e7f32277a67ee75d2f0",
-    "ai_diffusion/backend/api.py": "aea61c4f67e7c4ea8b7a25f5226d9a4c89f79d9aac5fab301f130f8e1aacdd45",
+    "ai_diffusion/backend/api.py": "54ed055090e93d4101865f19216833fc25157165dc6c62211d9c3ca8b4a6e233",
     "ai_diffusion/backend/background.py": "8af528d1168960b76a3038137f756132cb9f122ad0d5cbd6abe8e1ddeb4e0c6d",
     "ai_diffusion/backend/client.py": "1c734a026068dcab89bd56ab3f7c4cd0fead85b2ef98d134623890aab0fcd4b3",
     "ai_diffusion/backend/cloud_client.py": "4bd9c1bae9bdde8f32cd642eb85260897370411737a6c486256fa989bf255701",
-    "ai_diffusion/backend/comfy_client.py": "051bff41ac11080e45a5b2d5820ec15923989a7fdf0f0a78552f59af814188ff",
-    "ai_diffusion/backend/comfy_workflow.py": "97f006327d8fcde37f4b0432ecf2f4f555983e90d86894a044223f07b3ae0bee",
+    "ai_diffusion/backend/comfy_client.py": "d291512287cf59e7e1e4963d262cd43b0cc7ca872b57a839f1beafb010acc24d",
+    "ai_diffusion/backend/comfy_workflow.py": "584c907190cb6b364dcba871dfab04cc99b1d976c7180c6f03c5398f05c5dc07",
     "ai_diffusion/backend/network.py": "fbd29b08434c3d03928a580c7735f1c3e1851c41ccfa942229b0f856b0eeac0f",
     "ai_diffusion/backend/orchestrion_client.py": "51bb7b82d5307deb44ce782c1c6c5837cfee7b82310eca42f3d815759082a2b3",
-    "ai_diffusion/backend/resolution.py": "d9e64c3fce6fade8f79335689b1822a9f816bee7124adc43ee4c54c3f072c9b4",
-    "ai_diffusion/backend/resources.py": "cdd1758d878dc729642ff2884875949cd2763b4d0ec79191ec4636ae091156bc",
+    "ai_diffusion/backend/resolution.py": "b3ae4f33278c925079296dbf4a00896b78925716061ea85cf125d47adb2ff74a",
+    "ai_diffusion/backend/resources.py": "a36f10c6bbdf2e1e23ccae26d993e6e077ff8303c8c6a8ba52ffd7947120a78f",
     "ai_diffusion/backend/server.py": "0d8db6261e8e6bf2a33f7f5807c85bb9f414b7abf151fa54361a26a2f82b7d35",
-    "ai_diffusion/backend/workflow.py": "1576c8de183ec4e762436c32c0760c57ae932eebe8026643daa679db62c86c65",
+    "ai_diffusion/backend/workflow.py": "4dd8a9882dda77f5b1fa66b0351ad15e9ea2649dadcb08b30b4435bcf7c024e3",
     "ai_diffusion/backend/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "ai_diffusion/language/en.json": "de7ac7f50a18f81b6b493e241eef42403282c911cdb52fe0539da219b3f1fbc5",
     "ai_diffusion/language/es-ca.json": "8295237b2fe58cb512d372336b6933863ade2463a1feb5105bbb51e2bc6a2276",
@@ -57,7 +57,7 @@
     "ai_diffusion/model/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "ai_diffusion/presets/control.json": "a750ccb5ec99135880003557c3797c6d9210e730f9781d2134586d1264a7c172",
     "ai_diffusion/presets/models.json": "602ed3f7c99c6a721455838456472269bfff8de24581b3900ca80a3e4d07d767",
-    "ai_diffusion/presets/samplers.json": "dde1120edb3ab0d0a4b60fa70d157d20f4da79c15a2a6759a7b6428ab1d92013",
+    "ai_diffusion/presets/samplers.json": "14449dde235cd68ca78aef173074a9cd9b55b96930bcd58d6b206d5affbd4959",
     "ai_diffusion/styles/anima.json": "b989855fdfd3381f50c589cca7e06c52f5ce2bf4db32cd6702b57e92c324f024",
     "ai_diffusion/styles/anime-illustrious.json": "412324ad1129e26e078f9f23a1379dbcb91b853c2268f9f6ff398dc77cccb4d5",
     "ai_diffusion/styles/anime-noobai-xl.json": "87d884bd18213648eca46c0a7d15cf13ff87d811e0af2e8aa40a0a9f7a8b9acb",
@@ -430,12 +430,14 @@
     "tests/mock/krita.py": "2982986cacce9528ca4c18e9037768dcb8ccd2798b95054ebd6621c99f2cfcb2",
     "tests/mock/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "ai_diffusion/backend/a1111.py": "f3d3158f709570e75ff3cdb8e1ad0faad8fbcf5dacc0e9a7b5f72b36fc0f391d",
-    "ai_diffusion/styles/moss-image.json": "4cbaa1aa80c5f9cd7d2729fb3dbc60a0111bc6fd36458b482f0ca7baed6c128b"
+    "ai_diffusion/styles/moss-image.json": "4cbaa1aa80c5f9cd7d2729fb3dbc60a0111bc6fd36458b482f0ca7baed6c128b",
+    "ai_diffusion/styles/flux3-klein.json": "29c2a28d09af1b3a1921265ea02a710c305ad14ca3a35b5a62d55e555f2cfe4b"
   },
   "patches": [
     "Preserve soft compositing mask when inpaint blend is zero",
     "Krea 2 Identity and General Edit V2 selection, node capability checks, reference placement",
     "MOSS-Image architecture: Qwen3.5 9B encoder, Flux 2 VAE/latent, skip-layer guidance, model-only LoRA",
-    "MOSS-Image regions as a layout JSON prompt (MOSSImageLayoutPrompt format)"
+    "MOSS-Image regions as a layout JSON prompt (MOSSImageLayoutPrompt format)",
+    "FLUX 3 Klein architecture: Qwen3-VL 4B encoder (flux3), Flux 2 VAE/latent, zeroed negative, ReferenceMultiLatent edits, layout regions, model-only LoRA"
   ]
 }

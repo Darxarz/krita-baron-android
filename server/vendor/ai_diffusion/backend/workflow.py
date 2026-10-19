@@ -170,6 +170,8 @@ def load_checkpoint_with_lora(w: ComfyWorkflow, checkpoint: CheckpointInput, mod
                 clip = w.load_clip(te["qwen_3vl_8b"], type="qwen_image")
             case Arch.moss:
                 clip = w.load_clip(te["qwen_3_5_9b"], type="moss_image")
+            case Arch.flux3:
+                clip = w.load_clip(te["qwen_3vl_4b"], type="flux3")
             case _:
                 raise RuntimeError(f"No text encoder for model architecture {arch.name}")
 
@@ -190,8 +192,8 @@ def load_checkpoint_with_lora(w: ComfyWorkflow, checkpoint: CheckpointInput, mod
         if arch is Arch.krea2
         else checkpoint.loras
     ):
-        # MOSS: the quantized text encoder must not be patched
-        if arch is Arch.moss or (
+        # MOSS: the quantized text encoder must not be patched. FLUX 3 LoRAs are model only.
+        if arch in (Arch.moss, Arch.flux3) or (
             arch is Arch.krea2
             and (_is_krea_edit_lora(lora.name) or "krea2_style_reference" in lora.name.lower())
         ):
@@ -301,6 +303,15 @@ class LayoutBox(NamedTuple):
         if x1 <= x0 or y1 <= y0:
             return None
         return LayoutBox(bounds.extent, x0, y0, x1, y1)
+
+    def to_grid(self, size=1000):
+        """[ymin, xmin, ymax, xmax] relative to the image on a 0..size grid, as Flux3LayoutPrompt."""
+        w, h = self.extent
+
+        def grid(value: float):
+            return max(0, min(size, round(value * size)))
+
+        return [grid(self.y0 / h), grid(self.x0 / w), grid(self.y1 / h), grid(self.x1 / w)]
 
     def to_yxyx(self):
         """Pixel edges around the box, origin at the image centre, as MOSSImageLayoutPrompt."""
@@ -601,6 +612,16 @@ def apply_reference_conditioning(
             for extra_image in extra_images:
                 latent = vae_encode(w, vae, extra_image, tiled_vae)
                 prompt = add_ref(prompt, latent)
+        case Arch.flux3:
+            # The output latent comes from the canvas, ReferenceMultiLatent's empty latent is unused
+            refs = [input_image] if cond.edit_reference and input_image else []
+            refs += extra_images
+            if len(refs) > flux3_max_references:
+                raise RuntimeError(
+                    _("FLUX 3 Klein supports up to 10 reference images, including the canvas")
+                )
+            if refs:
+                prompt = w.reference_multi_latent(prompt, vae, refs)
         case Arch.flux_k | Arch.qwen_e:
             if len(extra_images) > 0:
                 if cond.edit_reference and input_image:
@@ -613,6 +634,17 @@ def apply_reference_conditioning(
                 prompt = add_ref(prompt, input_latent)
 
     return prompt, input_latent
+
+
+flux3_max_references = 10
+
+
+def _negative(w: ComfyWorkflow, cond: Conditioning, clip: Clip, positive: Output):
+    # FLUX 3 Klein is distilled: the unconditional is the zeroed positive, as in the reference
+    # workflows. References are added to both after this.
+    if clip.arch is Arch.flux3:
+        return w.conditioning_zero_out(positive)
+    return cond.negative.encode(w, clip) if cond.negative else positive
 
 
 def _edit_references(w: ComfyWorkflow, cond: Conditioning, image: Output | None, arch: Arch):
@@ -857,7 +889,7 @@ def encode_prompt(
 
     if cond.layout is not None:
         positive = cond.layout.encode(w, clip, None, ref_images)
-        negative = cond.negative.encode(w, clip) if cond.negative else positive
+        negative = _negative(w, cond, clip, positive)
         prompt = ConditioningOutput(positive, negative)
         return apply_reference_conditioning(w, prompt, image, cond, vae, arch, tiled_vae)
 
@@ -872,7 +904,7 @@ def encode_prompt(
             return prompt, latent if use_latent else None
         else:
             positive = cond.positive.encode(w, clip, cond.style_prompt, ref_images)
-            negative = cond.negative.encode(w, clip) if cond.negative else positive
+            negative = _negative(w, cond, clip, positive)
             prompt = ConditioningOutput(positive, negative)
             return apply_reference_conditioning(w, prompt, image, cond, vae, arch, tiled_vae)
 
@@ -915,6 +947,9 @@ def apply_attention_mask(
 
     if clip.arch is Arch.moss:
         cond.layout = moss_layout_prompt(cond, shape)
+        return model, None
+    if clip.arch is Arch.flux3:
+        cond.layout = flux3_layout_prompt(cond, shape)
         return model, None
 
     bottom_region = cond.regions[0]
@@ -990,6 +1025,27 @@ def moss_layout_prompt(cond: Conditioning, shape: Extent | ImageReshape = no_res
         "bbox_format": "yxyx",
     }
     return TextPrompt(json.dumps(layout, ensure_ascii=False, separators=(",", ":")), "")
+
+
+def flux3_layout_prompt(cond: Conditioning, shape: Extent | ImageReshape = no_reshape):
+    """FLUX 3 layout prompt: the global prompt followed by a table with the bounding box of each
+    region mask on a 0-1000 grid, as ComfyUI's CreateBoundingBoxes + Flux3LayoutPrompt build it.
+    The prompt can cite the boxes as <obj_1>, <obj_2>... in region order (bottom layer first)."""
+    prompt = merge_prompt(cond.positive.text, cond.style_prompt)
+    rows: list[dict[str, Any]] = []
+    for region in cond.regions:
+        caption = _region_caption(region.positive.text, cond.positive.text)
+        box = region.find_layout_box(shape) if caption else None
+        if box is None:
+            continue
+        if region.loras:
+            raise RuntimeError(_("FLUX 3 Klein regions do not support LoRAs, use global LoRAs"))
+        if match := _layout_label.match(caption):  # accept the MOSS label syntax
+            caption = caption[match.end() :].strip()
+        rows.append({"id": f"obj_{len(rows) + 1}", "bbox": box.to_grid(), "desc": caption})
+    if not rows:
+        return TextPrompt(prompt, "")
+    return TextPrompt(f"{prompt.rstrip()} {json.dumps(rows, ensure_ascii=False)}", "")
 
 
 def apply_control(
@@ -1798,7 +1854,7 @@ def upscale_tiled(
         img = w.extract_image_tile(img, tile_layout, index)
         return Control(control.mode, ImageOutput(img), None, control.strength, control.range)
 
-    is_layout = models.arch is Arch.moss
+    is_layout = models.arch in (Arch.moss, Arch.flux3)
     layout_boxes = [r.find_layout_box(extent.initial) if is_layout else None for r in cond.regions]
 
     def tiled_region(region: Region, index: int, tile_bounds: Bounds, layout_box: LayoutBox | None):
@@ -1960,7 +2016,9 @@ _layer_replace = {
     Arch.qwen_e_p: "Picture {}",
     Arch.qwen2: "<image{}>",
     Arch.krea2: "image {}",
+    Arch.flux3: "<ref_image_{}>",
 }
+_layer_index_base = {Arch.flux3: 0}  # first reference (canvas or first control layer)
 _control_instructions = {
     ControlMode.style: "Apply the style from {}.",
     ControlMode.composition: "Maintain the structure and composition from {}.",
@@ -1991,7 +2049,7 @@ def build_instructions(cond: ConditioningInput, arch: Arch, inpaint: InpaintMode
         if instructions != "":
             cond.edit_reference = True
 
-    offset = 2 if cond.edit_reference else 1
+    offset = _layer_index_base.get(arch, 1) + (1 if cond.edit_reference else 0)
     for i, control in enumerate(cond.control):
         if control.mode.can_substitute_instruction(arch):
             if instruction := _control_instructions.get(control.mode):

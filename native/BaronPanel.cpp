@@ -648,6 +648,9 @@ BaronPanel::BaronPanel(CanvasHost* host, QWidget* parent, PromptEditor::Completi
         } else if (name.contains("qwen")) {
             m_cfg->setValue(1);
             m_steps->setValue(25);
+        } else if (name.contains("flux3") || name.contains("flux 3") || name.contains("flux-3")) {
+            m_cfg->setValue(1);
+            m_steps->setValue(16);
         } else if (name.contains("klein")) {
             m_cfg->setValue(1);
             m_steps->setValue(4);

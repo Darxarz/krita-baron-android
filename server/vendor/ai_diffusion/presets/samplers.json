@@ -123,5 +123,12 @@
         "steps": 30,
         "minimum_steps": 20,
         "cfg": 3.0
+    },
+    "FLUX 3 Klein - Euler": {
+        "sampler": "euler",
+        "scheduler": "simple",
+        "steps": 16,
+        "minimum_steps": 8,
+        "cfg": 1.0
     }
 }

@@ -591,7 +591,7 @@ class ComfyWorkflow:
         w, h = extent.width, extent.height
         if arch.is_flux_like or arch.is_qwen_like or arch in (Arch.sd3, Arch.chroma, Arch.zimage):
             return self.add("EmptySD3LatentImage", 1, width=w, height=h, batch_size=batch_size)
-        if arch.is_flux2 or arch in (Arch.ernie, Arch.moss):
+        if arch.is_flux2 or arch in (Arch.ernie, Arch.moss, Arch.flux3):
             return self.add("EmptyFlux2LatentImage", 1, width=w, height=h, batch_size=batch_size)
         else:
             return self.add("EmptyLatentImage", 1, width=w, height=h, batch_size=batch_size)
@@ -673,6 +673,23 @@ class ComfyWorkflow:
 
     def reference_latent(self, conditioning: Output, latent: Output):
         return self.add("ReferenceLatent", 1, conditioning=conditioning, latent=latent)
+
+    def reference_multi_latent(
+        self, cond: ConditioningOutput, vae: Output, images: list[Output], megapixels=1.0
+    ):
+        """Encodes each image (resized to `megapixels`) and appends it to positive and negative."""
+        inputs: dict[str, Any] = {f"images.image{i}": image for i, image in enumerate(images)}
+        positive, negative, _ = self.add(
+            "ReferenceMultiLatent",
+            3,
+            positive=cond.positive,
+            negative=cond.negative,
+            vae=vae,
+            resolution="resize",
+            **{"resolution.megapixels": megapixels},
+            **inputs,
+        )
+        return ConditioningOutput(positive, negative)
 
     def text_encode_qwen_image_edit(
         self, clip: Output, vae: Output | None, image: Output, prompt: str | Output

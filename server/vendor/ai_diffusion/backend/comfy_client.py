@@ -546,6 +546,12 @@ class ComfyClient(Client):
             for name in moss:
                 del models.checkpoints[name]
 
+        flux3 = [n for n, cp in models.checkpoints.items() if cp.arch is Arch.flux3]
+        if flux3 and "flux3" not in nodes.options("CLIPLoader", "type"):
+            log.warning("FLUX 3 Klein: ComfyUI is too old (CLIPLoader has no 'flux3' type)")
+            for name in flux3:
+                del models.checkpoints[name]
+
         models.vae = nodes.options("VAELoader", "vae_name")
         models.loras = nodes.options("LoraLoader", "lora_name")
 

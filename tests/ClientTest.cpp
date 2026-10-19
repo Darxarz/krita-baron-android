@@ -785,6 +785,42 @@ private slots:
             mode->setCurrentIndex(mode->findData(name));
             QCOMPARE(panel.input(QRect(0, 0, 8, 8), {}, &error)["controls"].toArray().size(), 0);
         }
+        auto warning = panel.findChild<QLabel*>("controlWarning");
+        QVERIFY(warning && !warning->isHidden());  // MOSS
+        // FLUX 3 Klein: references and structural maps become reference images, no ControlNet presets
+        for (const auto& family : { "flux3", "FLUX 3 Klein" }) {
+            panel.setArchitecture(family);
+            for (const auto& name : { "reference", "style", "depth", "scribble", "pose" }) {
+                mode->setCurrentIndex(mode->findData(name));
+                QVERIFY2(warning->isHidden(), name);
+                QVERIFY(preset->isHidden());
+            }
+            mode->setCurrentIndex(mode->findData("normal"));
+            QCOMPARE(panel.input(QRect(0, 0, 8, 8), {}, &error)["controls"].toArray().size(), 0);
+        }
+    }
+    void flux3KleinDefaultsAndIcons() {
+        BaronPanel panel(nullptr);
+        auto model = panel.findChild<QComboBox*>("checkpointSelect");
+        auto steps = panel.findChild<QSpinBox*>("generationSteps");
+        auto cfg = panel.findChild<QDoubleSpinBox*>("generationCfg");
+        QVERIFY(model && steps && cfg);
+        model->addItem("FLUX 2 Klein", "flux2klein\\flux-2-klein-4b.safetensors");
+        model->addItem("FLUX 3 Klein", "flux3\\flux3-image-klein-int8-convrot.safetensors");
+        model->setCurrentIndex(model->findData("flux2klein\\flux-2-klein-4b.safetensors"));
+        QCOMPARE(steps->value(), 4);
+        model->setCurrentIndex(model->findData("flux3\\flux3-image-klein-int8-convrot.safetensors"));
+        QCOMPARE(steps->value(), 16);
+        QCOMPARE(cfg->value(), 1.0);
+        QCOMPARE(PluginUi::architectureIcon("FLUX 3 Klein"), QString("sd-version-flux-3"));
+        QCOMPARE(PluginUi::architectureIcon("flux3"), QString("sd-version-flux-3"));
+        QCOMPARE(PluginUi::architectureIcon("Flux 2 Klein 4B"), QString("sd-version-flux-2"));
+        QVERIFY(!PluginUi::icon("sd-version-flux-3", model).isNull());
+        InpaintWidget inpaint;
+        inpaint.setCapabilities("flux3", 1, false);
+        QVERIFY(inpaint.findChild<QCheckBox*>("inpaintEdit")->isEnabled());
+        inpaint.setCapabilities("moss", 1, false);
+        QVERIFY(!inpaint.findChild<QCheckBox*>("inpaintEdit")->isEnabled());
     }
     void addControlReusesLastModeAndActiveLayer() {
         class Host : public CanvasHost {

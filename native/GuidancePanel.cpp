@@ -140,6 +140,7 @@ public:
         preset->setToolTip(tr("Control strength: how much the layer affects the image"));
         row->addWidget(preset, 1);
         warning = new QLabel(this);
+        warning->setObjectName("controlWarning");
         warning->hide();
         row->addWidget(warning, 3);
         extend = new QToolButton(this);
@@ -293,10 +294,10 @@ public:
     void updateArchitecture() {
         const bool reference = QStringList { "reference", "style", "composition", "face" }.contains(mode);
         const bool instruction = architecture == "qwen2" || architecture == "krea2" || architecture.startsWith("flux2_")
-            || architecture == "flux_k" || architecture == "qwen_l" || architecture.startsWith("qwen_e");
+            || architecture == "flux3" || architecture == "flux_k" || architecture == "qwen_l" || architecture.startsWith("qwen_e");
         // MOSS-Image has no ControlNet, IP-Adapter or reference input
         supported = architecture != "moss" && (!instruction || reference
-            || ((architecture == "qwen2" || architecture.startsWith("flux2_"))
+            || ((architecture == "qwen2" || architecture.startsWith("flux2_") || architecture == "flux3")
                 && QStringList { "scribble", "line_art", "canny_edge", "depth", "pose" }.contains(mode)));
         preset->setVisible(supported && !instruction);
         extend->setVisible(supported && !instruction);
@@ -669,6 +670,7 @@ void GuidancePanel::setArchitecture(const QString& family) {
     else if (arch == "qwen21" || arch == "qwen-image21" || arch == "qwen image 2.1") arch = "qwen2";
     else if (arch == "krea 2") arch = "krea2";
     else if (arch == "moss-image" || arch == "moss image" || arch == "moss_image") arch = "moss";
+    else if (arch == "flux 3 klein" || arch == "flux3-klein" || arch == "flux3_klein") arch = "flux3";
     else if (arch == "flux 2 klein 9b") arch = "flux2_9b";
     else if (arch == "flux 2 klein 4b") arch = "flux2_4b";
     if (arch == m_architecture) return;

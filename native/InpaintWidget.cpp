@@ -62,7 +62,7 @@ void InpaintWidget::setCapabilities(const QString& arch,double strength,bool edi
     const bool xl=QStringList{"sdxl","illu","illu_v"}.contains(family)||family.contains("illustrious")||family.contains("pony")||family.contains("noob")||family.contains("sdxl");
     m_seamless->setEnabled(xl||QStringList{"sd15","flux","zimage","qwen","anima"}.contains(arch));
     m_focus->setVisible(arch=="sd15"||xl);m_fill->setEnabled(strength==1&&!editing);
-    const bool canEdit=QStringList{"flux_k","flux2_4b","flux2_9b","qwen_e","qwen_e_p","qwen2","krea2"}.contains(family)||family.contains("qwen")||family.contains("krea")||family.contains("flux2");
+    const bool canEdit=QStringList{"flux_k","flux2_4b","flux2_9b","flux3","qwen_e","qwen_e_p","qwen2","krea2"}.contains(family)||family.contains("qwen")||family.contains("krea")||family.contains("flux2")||family.contains("flux 3");
     m_edit->setEnabled(canEdit);QSignalBlocker guard(m_edit);m_edit->setChecked(editing);
 }
 int InpaintWidget::diffusionMultiple(const QString& arch) {
