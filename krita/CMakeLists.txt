@@ -21,7 +21,8 @@ set(BARON_SOURCES
     native/PersonalFonts.cpp
     native/Localization.cpp
     native/translations.qrc
-    native/OrchestrionClient.cpp)
+    native/OrchestrionClient.cpp
+    native/OrchestrionInbox.cpp)
 kis_add_library(kritabarondocker MODULE ${BARON_SOURCES})
 set_target_properties(kritabarondocker PROPERTIES AUTORCC ON)
 target_include_directories(kritabarondocker PRIVATE native)

@@ -21,7 +21,8 @@ public:
         if (name != "BaronPanel" && name != "OrchestrionClient" && name != "BaronDocker"
             && name != "BaronUpdates" && name != "GuidancePanel" && name != "JobQueue"
             && name != "ModelCatalog" && name != "InterfaceSettings" && name != "ToggleSwitch"
-            && name != "InpaintWidget" && name != "AuthorCredits" && name != "UpscaleWidget")
+            && name != "InpaintWidget" && name != "AuthorCredits" && name != "UpscaleWidget"
+            && name != "OrchestrionInbox")
             return {};
         return entries.value(QString::fromUtf8(source)).toString();
     }

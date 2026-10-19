@@ -4,6 +4,11 @@
 #include "native/PersonalFonts.h"
 #include "native/OrientationLayouts.h"
 #include "native/InpaintWidget.h"
+#include "native/OrchestrionInbox.h"
+#include <KisMainWindow.h>
+#include <KisPart.h>
+#include <KoColor.h>
+#include <kis_config.h>
 #include <QSettings>
 #include <kis_selection_mask.h>
 #include <kis_selection_manager.h>
@@ -143,6 +148,43 @@ public:
         else
             image->addAnnotation(new KisAnnotation(key, "AI Diffusion Plugin", bytes));
         document->setModified(true);
+    }
+    bool openDocument(const QImage& picture, const QString& name, const QByteArray& inbox, QString* error) override {
+        // Same steps as the scripting API: Krita.createDocument() + Window.addView()
+        auto part = KisPart::instance();
+        auto window = part->currentMainwindow();
+        if (!window || picture.isNull()) {
+            if (error) *error = tr("Open a Krita window first");
+            return false;
+        }
+        const KoColorSpace* space = KoColorSpaceRegistry::instance()->rgb8();
+        KisDocument* document = part->createDocument();
+        document->setObjectName(name);
+        part->addDocument(document, false);
+        if (!document->newImage(name, picture.width(), picture.height(), space,
+                KoColor(Qt::transparent, space), KisConfig::RASTER_LAYER, 1, "", 300.0 / 72)) {
+            part->removeDocument(document);
+            if (error) *error = tr("Could not create a new document");
+            return false;
+        }
+        KisImageSP image = document->image();
+        KisPaintLayerSP layer;
+        for (KisNodeSP node = image->root()->firstChild(); node; node = node->nextSibling())
+            if (auto paint = dynamic_cast<KisPaintLayer*>(node.data())) layer = paint;
+        if (!layer) {
+            layer = new KisPaintLayer(image, name, 255);
+            image->addNode(layer, image->rootLayer());
+        }
+        layer->setName(name);
+        layer->paintDevice()->clear();
+        layer->paintDevice()->convertFromQImage(
+            picture.convertToFormat(QImage::Format_ARGB32), space->profile());
+        image->addAnnotation(new KisAnnotation(OrchestrionInbox::annotationKey, "Orchestrion inbox item", inbox));
+        image->refreshGraphAsync(image->rootLayer(), image->bounds());
+        image->waitForDone();
+        window->addViewAndNotifyLoadingCompleted(document);
+        document->setModified(false);
+        return true;
     }
     QString restoreTarget(const QRect& area, const QImage& mask) override {
         if (!canvasReady() || area.isEmpty())

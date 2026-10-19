@@ -15,6 +15,7 @@
 #include "TagModel.h"
 #include "Localization.h"
 #include "ModelCatalog.h"
+#include "OrchestrionInbox.h"
 #include "PluginUi.h"
 #include <QApplication>
 #include <QBuffer>
@@ -100,6 +101,8 @@ BaronPanel::BaronPanel(CanvasHost* host, QWidget* parent, PromptEditor::Completi
     BaronLocalization::install();
     setObjectName("BaronOrchestrionPanel");
     m_client = new OrchestrionClient(this);
+    m_inbox = new OrchestrionInbox(this);
+    m_inbox->setAutoOpen(QSettings("BaronEdition", "Orchestrion").value("inboxAutoOpen", true).toBool());
     m_jobs = new JobQueue(m_client, this);
     auto layout = new QVBoxLayout(this);
     layout->setSpacing(6);
@@ -162,6 +165,7 @@ BaronPanel::BaronPanel(CanvasHost* host, QWidget* parent, PromptEditor::Completi
     auto changeConnection = [this, signIn, token, originalSite, serverGuide, accountLink, choiceGroup, connectionButtons, connectLayout] {
         QSettings settings("BaronEdition", "Orchestrion");
         const auto backend = OrchestrionClient::Backend(m_connectionMode->currentData().toInt());
+        m_inbox->stop();
         if (!m_client->root().isEmpty()) {
             if (m_client->backend() == OrchestrionClient::orchestrion) settings.setValue("website", m_url->text());
             else if (m_client->backend() == OrchestrionClient::comfyui) {
@@ -273,6 +277,10 @@ BaronPanel::BaronPanel(CanvasHost* host, QWidget* parent, PromptEditor::Completi
         tabs->setCurrentIndex(0);
     });
     connect(m_client, &OrchestrionClient::accountReady, this, [this, connectionButtons](const auto& data) {
+        if (m_client->backend() == OrchestrionClient::orchestrion && !data.isEmpty())
+            m_inbox->start(m_client->root(), m_client->accessToken());
+        else
+            m_inbox->stop();
         for (auto button : connectionButtons) button->setStatus(tr("Not connected"), QColor("#888888"));
         if (!data.isEmpty()) connectionButtons[m_connectionMode->currentIndex()]->setStatus(tr("Connected"), QColor("#55aa55"));
         if (m_client->backend() == OrchestrionClient::interstice) {
@@ -744,8 +752,74 @@ BaronPanel::BaronPanel(CanvasHost* host, QWidget* parent, PromptEditor::Completi
     auto modelGallery = new QPushButton(tr("Models"), generation);
     modelGallery->setObjectName("modelGalleryButton");
     priceRow->addWidget(modelGallery);
+    m_inboxButton = new QToolButton(generation);
+    m_inboxButton->setObjectName("inboxButton");
+    m_inboxButton->setPopupMode(QToolButton::InstantPopup);
+    m_inboxButton->setMinimumHeight(modelGallery->sizeHint().height());
+    auto inboxMenu = new QMenu(m_inboxButton);
+    m_inboxButton->setMenu(inboxMenu);
+    m_inboxButton->hide();
+    priceRow->addWidget(m_inboxButton);
+    m_returnButton = new QPushButton(tr("Return to website"), generation);
+    m_returnButton->setObjectName("returnToWebsite");
+    m_returnButton->setToolTip(tr("Sends the flattened image back to the website item it was opened from"));
+    m_returnButton->hide();
+    priceRow->addWidget(m_returnButton);
     form->addRow(priceRow);
     connect(modelGallery, &QPushButton::clicked, this, [this] { openCatalog("all"); });
+    connect(inboxMenu, &QMenu::aboutToShow, this, [this, inboxMenu] {
+        inboxMenu->clear();
+        const auto items = m_inbox->items();
+        if (items.isEmpty())
+            inboxMenu->addAction(tr("Pictures sent from the website with “Send to Krita” appear here"))->setEnabled(false);
+        for (const auto& item : items) {
+            const auto status = item["status"].toString();
+            const auto state = status == "opened"
+                ? tr("opened on %1").arg(item["openedBy"].toObject()["deviceName"].toString("?"))
+                : status == "returned" ? tr("returned, version %1").arg(item["version"].toInt()) : tr("new");
+            const auto title = item["title"].toString(item["filename"].toString());
+            const auto id = item["id"].toString();
+            connect(inboxMenu->addAction(title + " · " + state), &QAction::triggered, this,
+                [this, id] { m_inbox->open(id); });
+        }
+    });
+    connect(m_returnButton, &QPushButton::clicked, this, &BaronPanel::returnToWebsite);
+    connect(m_inbox, &OrchestrionInbox::changed, this, &BaronPanel::updateInbox);
+    connect(m_inbox, &OrchestrionInbox::pictureReady, this,
+        [this](const QJsonObject& item, const QImage& picture, const QByteArray& annotation) {
+            const auto title = item["title"].toString(item["filename"].toString());
+            QString issue;
+            if (!m_host || !m_host->openDocument(picture, title, annotation, &issue)) {
+                m_status->setText(tr("Could not open the picture from the website: %1")
+                        .arg(issue.isEmpty() ? tr("Open a Krita window first") : issue));
+                return;
+            }
+            m_status->setText(tr("Opened from the website: %1").arg(title));
+            updateInbox();
+        });
+    connect(m_inbox, &OrchestrionInbox::returned, this, [this](const QJsonObject& result) {
+        auto text = tr("Returned to the website as version %1.").arg(result["version"].toInt());
+        if (result.contains("placedInto")) text += " " + tr("Placed into the comic panel.");
+        else if (result.contains("placeError"))
+            text += " " + tr("The comic panel was not found, the picture was saved to your gallery.");
+        m_status->setText(text);
+        m_returnButton->setEnabled(true);
+        m_returnButton->setText(tr("Return to website"));
+    });
+    connect(m_inbox, &OrchestrionInbox::failed, this,
+        [this](const QString& message, const QString& code, const QString& id) {
+            const bool returning = !m_returnButton->isEnabled();
+            m_returnButton->setEnabled(true);
+            m_returnButton->setText(tr("Return to website"));
+            if (!returning && code == "already_opened" && !id.isEmpty()) {
+                const auto answer = QMessageBox::question(this, "Orchestrion",
+                    message + "\n\n" + tr("Open it here anyway?"));
+                if (answer == QMessageBox::Yes) m_inbox->open(id, true);
+                return;
+            }
+            m_status->setText(returning || id.isEmpty() ? message
+                    : tr("Could not open the picture from the website: %1").arg(message));
+        });
     connect(m_run, &QPushButton::clicked, this, [this] { prepare(true); });
     connect(m_quote, &QPushButton::clicked, this, [this] { prepare(false); });
     connect(m_mode, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
@@ -2259,6 +2333,28 @@ void BaronPanel::documentChanged() {
     m_inpaint->setLayers(m_host ? m_host->layers() : QJsonArray());
     updateMode();
     updateJobs();
+    updateInbox();
+}
+void BaronPanel::updateInbox() {
+    m_inboxButton->setVisible(m_inbox->enabled());
+    const int count = m_inbox->unopenedCount();
+    m_inboxButton->setText(count ? tr("Inbox (%1)").arg(count) : tr("Inbox"));
+    m_inboxButton->setToolTip(m_inbox->lastError());
+    const bool fromWebsite = m_host && !m_host->annotation(OrchestrionInbox::annotationKey).isEmpty();
+    m_returnButton->setVisible(m_inbox->enabled() && fromWebsite);
+}
+void BaronPanel::returnToWebsite() {
+    if (!m_host || !m_returnButton->isEnabled()) return;
+    const auto annotation = m_host->annotation(OrchestrionInbox::annotationKey);
+    QString issue;
+    const auto picture = m_host->layerImage("visible", QRect(), &issue);
+    if (annotation.isEmpty() || picture.isNull()) {
+        m_status->setText(issue.isEmpty() ? tr("Open a Krita document first") : issue);
+        return;
+    }
+    m_returnButton->setEnabled(false);
+    m_returnButton->setText(tr("Returning…"));
+    m_inbox->returnPicture(annotation, picture);
 }
 QSharedPointer<HistoryStore> BaronPanel::history(const QString& document) {
     if (document.isEmpty())
