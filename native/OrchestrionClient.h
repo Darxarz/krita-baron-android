@@ -22,6 +22,7 @@ public:
     static QUrl validateRoot(const QString& text, QString* error = nullptr);
     bool setRoot(const QString& text);
     QUrl root() const { return m_root; }
+    QByteArray accessToken() const { return m_token; }
     bool signedIn() const { return m_backend == comfyui ? m_connected : !m_token.isEmpty(); }
     Backend backend() const { return m_backend; }
     void setBackend(Backend backend);

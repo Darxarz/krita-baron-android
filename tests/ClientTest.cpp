@@ -6,6 +6,7 @@
 #include "Localization.h"
 #include "ModelThumbnails.h"
 #include "OrchestrionClient.h"
+#include "OrchestrionInbox.h"
 #include "PluginUi.h"
 #include "PromptActions.h"
 #include "PromptLogic.h"
@@ -1066,6 +1067,7 @@ private slots:
                 if (path.contains("/device/start")) response = R"({"device_code":"test","user_code":"AB12345678","verification_uri":"/connect/krita","expires_in":600,"interval":5})";
                 else if (path.contains("/device/poll")) response = R"({"access_token":"ork_krita_test"})";
                 else if (path.contains("/account")) response = R"({"coins":42})";
+                else if (path.contains("/api/krita/info")) response = R"({"version":1,"features":[]})";
                 else if (path.contains("/models")) response = R"({"items":[{"kind":"checkpoint","name":"test.safetensors","title":"Test","family":"sdxl"}]})";
                 else if (path.contains("/object_info")) {
                     QVERIFY(bytes.contains("Authorization: Bearer ork_krita_test"));
@@ -1778,6 +1780,141 @@ private slots:
                 QVERIFY(!icon.pixmap(24, 24).isNull());
             }
         }
+    }
+    void orchestrionInboxOpensVerifiesAndReturns() {
+        QImage source(6, 4, QImage::Format_ARGB32);
+        source.fill(qRgba(30, 60, 90, 128));
+        QByteArray png;
+        QBuffer buffer(&png);
+        buffer.open(QIODevice::WriteOnly);
+        source.save(&buffer, "PNG");
+        auto makeItem = [&](const QString& id, const QByteArray& bytes, const QString& status = "new") {
+            return QJsonObject { { "id", id }, { "createdAt", "2026-10-19T10:00:00Z" }, { "title", QString("Picture " + id) },
+                { "source", "comic" }, { "filename", QString(id + ".png") }, { "mime", "image/png" },
+                { "bytes", bytes.size() }, { "sha256", QString(QCryptographicHash::hash(bytes, QCryptographicHash::Sha256).toHex()) },
+                { "width", 6 }, { "height", 4 }, { "imageUrl", QString("/api/krita/inbox/" + id + "/image") }, { "status", status },
+                { "returnTarget", QJsonObject { { "kind", "comicPanel" }, { "projectId", 8 }, { "panelId", "p1" } } } };
+        };
+        QHash<QString, QJsonObject> items { { "good", makeItem("good", png) } };
+        QSet<QString> takenElsewhere, corrupt;
+        QList<QJsonObject> acks;
+        QByteArray returnKey, returnType, returnQuery, returnBody, auth;
+        PreviewNetwork network;
+        network.respond = [&](QNetworkAccessManager::Operation op, const QNetworkRequest& request, const QByteArray& body) {
+            const auto path = request.url().path();
+            auth = request.rawHeader("Authorization");
+            auto json = [](const QJsonObject& object, int status = 200, int delay = 0) {
+                return PreviewResponse { status, {}, QJsonDocument(object).toJson(), delay };
+            };
+            if (path == "/api/krita/info") return json({ { "features", QJsonArray { "inbox:1" } } });
+            if (path == "/api/krita/inbox") {
+                if (request.url().hasQuery()) return json({ { "items", QJsonArray() }, { "removed", QJsonArray() }, { "cursor", "1" } }, 200, 40);
+                QJsonArray list;
+                for (const auto& item : items) list.append(item);
+                return json({ { "items", list }, { "cursor", "1" } });
+            }
+            const auto id = path.section('/', 4, 4);
+            if (path.endsWith("/ack") && op == QNetworkAccessManager::PostOperation) {
+                auto ack = QJsonDocument::fromJson(body).object();
+                ack["_id"] = id;
+                acks.append(ack);
+                if (takenElsewhere.contains(id) && !ack["force"].toBool())
+                    return json({ { "error", "Already opened" }, { "code", "already_opened" },
+                        { "openedBy", QJsonObject { { "deviceName", "Studio PC" } } } }, 409);
+                items[id]["status"] = "opened";
+                return json({ { "ok", true }, { "item", items[id] } });
+            }
+            if (path.endsWith("/image")) {
+                auto bytes = png;
+                if (corrupt.contains(id)) bytes[bytes.size() - 1] = char(bytes[bytes.size() - 1] ^ 0xff);
+                return PreviewResponse { 200, {}, bytes };
+            }
+            if (path.endsWith("/return")) {
+                returnKey = request.rawHeader("Idempotency-Key");
+                returnBody = body;
+                returnType = request.header(QNetworkRequest::ContentTypeHeader).toByteArray();
+                returnQuery = request.url().query().toUtf8();
+                if (QImage::fromData(body).size() != QSize(6, 4)) return json({ { "code", "invalid_png" } }, 422);
+                return json({ { "ok", true }, { "generationId", 5 }, { "version", 1 },
+                    { "placedInto", QJsonObject { { "projectId", 8 }, { "panelId", "p1" } } } });
+            }
+            return PreviewResponse { 404, {}, {} };
+        };
+        OrchestrionInbox inbox(nullptr, &network);
+        QSignalSpy ready(&inbox, &OrchestrionInbox::pictureReady);
+        QSignalSpy failed(&inbox, &OrchestrionInbox::failed);
+        QSignalSpy returned(&inbox, &OrchestrionInbox::returned);
+        inbox.start(QUrl("https://orchestrion.ink"), "ork_krita_test");
+        QTRY_COMPARE_WITH_TIMEOUT(ready.count(), 1, 3000);
+        QCOMPARE(auth, QByteArray("Bearer ork_krita_test"));
+        QVERIFY(inbox.enabled());
+        QCOMPARE(acks.first()["deviceId"].toString(), OrchestrionInbox::deviceId());
+        QCOMPARE(acks.first()["force"].toBool(), false);
+        const auto picture = ready.first()[1].value<QImage>();
+        QCOMPARE(picture.size(), QSize(6, 4));
+        const auto annotation = ready.first()[2].toByteArray();
+        const auto info = QJsonDocument::fromJson(annotation).object();
+        QCOMPARE(info["id"].toString(), QString("good"));
+        QCOMPARE(info["origin"].toString(), QString("https://orchestrion.ink"));
+        QCOMPARE(info["returnTarget"].toObject()["kind"].toString(), QString("comicPanel"));
+
+        inbox.returnPicture(annotation, picture);
+        QTRY_COMPARE_WITH_TIMEOUT(returned.count(), 1, 3000);
+        QCOMPARE(returned.first()[0].toJsonObject()["version"].toInt(), 1);
+        QCOMPARE(returnType, QByteArray("image/png"));
+        QCOMPARE(returnQuery, QByteArray("width=6&height=4"));
+        QCOMPARE(returnKey, OrchestrionInbox::returnKey("good", returnBody).toLatin1());
+        QCOMPARE(returnKey.size(), 48);
+
+        // Origin of the document must match the connected website
+        auto foreign = info;
+        foreign["origin"] = "https://elsewhere.example";
+        inbox.returnPicture(QJsonDocument(foreign).toJson(), picture);
+        QCOMPARE(failed.last()[1].toString(), QString("origin"));
+
+        // Damaged downloads never reach Krita
+        failed.clear();
+        corrupt.insert("broken");
+        items.insert("broken", makeItem("broken", png));
+        inbox.stop();
+        inbox.start(QUrl("https://orchestrion.ink"), "ork_krita_test");
+        QTRY_VERIFY_WITH_TIMEOUT(!failed.isEmpty(), 3000);
+        QCOMPARE(failed.first()[1].toString(), QString("checksum"));
+        QCOMPARE(ready.count(), 1);
+
+        // Pictures open on another device are skipped automatically, then taken over on request
+        failed.clear();
+        takenElsewhere.insert("taken");
+        items.insert("taken", makeItem("taken", png));
+        inbox.stop();
+        inbox.start(QUrl("https://orchestrion.ink"), "ork_krita_test");
+        QTRY_VERIFY_WITH_TIMEOUT(std::any_of(acks.begin(), acks.end(),
+            [](const QJsonObject& ack) { return ack["_id"].toString() == "taken" && !ack["force"].toBool(); }), 3000);
+        QTest::qWait(150);
+        QVERIFY(std::none_of(failed.begin(), failed.end(),
+            [](const QList<QVariant>& args) { return args[1].toString() == "already_opened"; }));
+        inbox.open("taken");
+        QTRY_VERIFY_WITH_TIMEOUT(std::any_of(failed.begin(), failed.end(),
+            [](const QList<QVariant>& args) { return args[1].toString() == "already_opened" && args[2].toString() == "taken"; }), 3000);
+        const int before = ready.count();
+        inbox.open("taken", true);
+        QTRY_COMPARE_WITH_TIMEOUT(ready.count(), before + 1, 3000);
+        QVERIFY(acks.last()["force"].toBool());
+        inbox.stop();
+        QVERIFY(!inbox.enabled());
+    }
+    void orchestrionInboxRejectsForeignImageLocations() {
+        QJsonObject item { { "id", "abc" }, { "bytes", 10 }, { "sha256", QString(64, 'a') },
+            { "imageUrl", "/api/krita/inbox/abc/image" } };
+        QVERIFY(OrchestrionInbox::validItem(item));
+        for (const auto& url : { "https://elsewhere.example/api/krita/inbox/abc/image", "//elsewhere.example/x",
+                 "/api/krita/inbox/other/image", "/api/krita/inbox/abc/image?x=1" }) {
+            item["imageUrl"] = url;
+            QVERIFY2(!OrchestrionInbox::validItem(item), url);
+        }
+        item["imageUrl"] = "/api/krita/inbox/../image";
+        item["id"] = "..";
+        QVERIFY(!OrchestrionInbox::validItem(item));
     }
     void initTestCase() {
         QVERIFY(settingsDirectory.isValid());

@@ -18,7 +18,7 @@ target_sources(baron_native PRIVATE native/PersonalFonts.cpp native/ModelCatalog
 target_sources(baron_native PRIVATE native/InterfaceSettings.cpp)
 target_sources(baron_native PRIVATE native/OrientationLayouts.cpp native/InpaintWidget.cpp)
 target_sources(baron_native PRIVATE native/AuthorCredits.cpp)
-target_sources(baron_native PRIVATE native/CloudWorkflow.cpp)
+target_sources(baron_native PRIVATE native/CloudWorkflow.cpp native/OrchestrionInbox.cpp)
 target_sources(baron_native PRIVATE native/UpscaleWidget.cpp)
 target_sources(baron_native PRIVATE native/ConnectionButton.cpp native/PromptLogic.cpp native/PromptActions.cpp native/prompt.qrc)
 target_compile_definitions(baron_native PUBLIC QT_USE_QSTRINGBUILDER QT_USE_FAST_CONCATENATION QT_USE_FAST_OPERATOR_PLUS)

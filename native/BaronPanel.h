@@ -59,12 +59,18 @@ public:
     }
     virtual QString restoreTarget(const QRect&, const QImage&) { return {}; }
     virtual bool scaleTarget(const QString&, QSize, QString*) { return false; }
+    // Opens a picture as a new Krita document; annotation links it to the website inbox item
+    virtual bool openDocument(const QImage&, const QString&, const QByteArray& annotation, QString*) {
+        Q_UNUSED(annotation);
+        return false;
+    }
 };
 
 class InpaintWidget;
 class GuidancePanel;
 class UpscaleWidget;
 class ModelCatalog;
+class OrchestrionInbox;
 class QCheckBox;
 class QDialog;
 class QStackedWidget;
@@ -157,6 +163,11 @@ private:
     QByteArray m_historyKey;
     CanvasHost* m_host;
     OrchestrionClient* m_client;
+    OrchestrionInbox* m_inbox;
+    QToolButton* m_inboxButton;
+    QPushButton* m_returnButton;
+    void updateInbox();
+    void returnToWebsite();
     QComboBox* m_connectionMode;
     QLineEdit *m_url, *m_filter, *m_seed;
     PromptEditor *m_prompt, *m_negative;
