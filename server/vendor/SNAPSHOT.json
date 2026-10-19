@@ -28,7 +28,7 @@
     "ai_diffusion/backend/resolution.py": "b3ae4f33278c925079296dbf4a00896b78925716061ea85cf125d47adb2ff74a",
     "ai_diffusion/backend/resources.py": "a36f10c6bbdf2e1e23ccae26d993e6e077ff8303c8c6a8ba52ffd7947120a78f",
     "ai_diffusion/backend/server.py": "0d8db6261e8e6bf2a33f7f5807c85bb9f414b7abf151fa54361a26a2f82b7d35",
-    "ai_diffusion/backend/workflow.py": "4dd8a9882dda77f5b1fa66b0351ad15e9ea2649dadcb08b30b4435bcf7c024e3",
+    "ai_diffusion/backend/workflow.py": "71c4b40e85fc341963b031dfadcad72e783760c1667fd163007a0bf4a22885b5",
     "ai_diffusion/backend/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "ai_diffusion/language/en.json": "de7ac7f50a18f81b6b493e241eef42403282c911cdb52fe0539da219b3f1fbc5",
     "ai_diffusion/language/es-ca.json": "8295237b2fe58cb512d372336b6933863ade2463a1feb5105bbb51e2bc6a2276",
@@ -438,6 +438,7 @@
     "Krea 2 Identity and General Edit V2 selection, node capability checks, reference placement",
     "MOSS-Image architecture: Qwen3.5 9B encoder, Flux 2 VAE/latent, skip-layer guidance, model-only LoRA",
     "MOSS-Image regions as a layout JSON prompt (MOSSImageLayoutPrompt format)",
-    "FLUX 3 Klein architecture: Qwen3-VL 4B encoder (flux3), Flux 2 VAE/latent, zeroed negative, ReferenceMultiLatent edits, layout regions, model-only LoRA"
+    "FLUX 3 Klein architecture: Qwen3-VL 4B encoder (flux3), Flux 2 VAE/latent, zeroed negative, ReferenceMultiLatent edits, layout regions, model-only LoRA",
+    "MOSS-Image regions default to character, box positions for two or more characters"
   ]
 }

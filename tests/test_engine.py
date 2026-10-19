@@ -668,8 +668,8 @@ class EngineTests(unittest.TestCase):
             "prompt": "улица в сумерках",
             "negative": "blurry",
             "regions": [
-                {"id": "girl", "mask": rect_mask(40, 100, 460, 900), "prompt": f"character: {girl}"},
-                {"id": "sign", "mask": rect_mask(560, 50, 960, 350), "prompt": sign},
+                {"id": "girl", "mask": rect_mask(40, 100, 460, 900), "prompt": girl},
+                {"id": "sign", "mask": rect_mask(560, 50, 960, 350), "prompt": f"object: {sign}"},
             ],
         }
         graph = self.compile_moss(request)["prompt"]
@@ -694,6 +694,28 @@ class EngineTests(unittest.TestCase):
             },
         )
         self.assertIn("улица", layouts[0])  # ensure_ascii=False, like MOSSImageLayoutPrompt
+
+        # Regions are characters by default; two or more get the box position instead of
+        # left/right words. Quoted text adds a text item whatever the label.
+        bakery = "a bakery sign that says \"BARON'S BAKERY\""
+        request["regions"] = [
+            {"id": "satyr", "mask": rect_mask(40, 260, 480, 1000), "prompt": "a tall satyr on the right"},
+            {"id": "nymph", "mask": rect_mask(600, 260, 1000, 1000), "prompt": "a nymph on the left"},
+            {"id": "sign", "mask": rect_mask(300, 20, 720, 220), "prompt": bakery},
+        ]
+        graph = self.compile_moss(request)["prompt"]
+        texts = [n["inputs"]["text"] for n in graph.values() if n["class_type"] == "CLIPTextEncode"]
+        items = json.loads(next(t for t in texts if t.startswith("{")))["items"]
+        self.assertEqual(items[0]["bbox"], [-252, -472, 488, -32])
+        self.assertEqual(
+            [(i["label"], i["caption"], i.get("text")) for i in items],
+            [
+                ("character", "a tall satyr, on the left of the frame", None),
+                ("character", "a nymph, on the right of the frame", None),
+                ("character", f"{bakery}, in the center", None),
+                ("text", bakery, "BARON'S BAKERY"),
+            ],
+        )
 
     flux3 = "flux3\\flux3-image-klein-int8-convrot.safetensors"
     flux3_lora = "flux3\\Baron_Satyr_FLUX3.safetensors"

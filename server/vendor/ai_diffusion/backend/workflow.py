@@ -969,7 +969,7 @@ def apply_attention_mask(
     return model, regions
 
 
-_layout_label = re.compile(r"^\s*(character|object|text)\s*:\s*", re.IGNORECASE)
+_layout_label_prefix = re.compile(r"^\s*(character|object|text)\s*:\s*", re.IGNORECASE)
 _layout_quote = re.compile(r'"([^"]+)"|“([^”]+)”|«([^»]+)»')
 
 
@@ -984,17 +984,49 @@ def _region_caption(region_prompt: str, global_prompt: str):
     return caption.strip()
 
 
-def moss_layout_items(caption: str, bbox: list[int]):
+_layout_side = re.compile(
+    r"\b(?:(?:on|to|at|in)\s+the\s+)?(?:far\s+)?(?:left|right)"
+    r"(?!\s+(?:hand|arm|leg|foot|eye|ear|shoulder|wing|horn|cheek)s?\b)(?:\s+side)?"
+    r"(?:\s+(?:of|in)\s+the\s+(?:frame|image|picture|scene))?\b|\b(?:слева|справа)\b",
+    re.IGNORECASE,
+)
+
+
+def _layout_label(caption: str):
+    """Label from an optional "character:"/"object:"/"text:" prefix, "character" by default."""
+    if match := _layout_label_prefix.match(caption):
+        return match[1].lower(), caption[match.end() :].strip()
+    return "character", caption
+
+
+def _layout_position(box: LayoutBox):
+    center = (box.x0 + box.x1) / 2 / box.extent.width
+    if center < 1 / 3:
+        return "on the left of the frame"
+    if center > 2 / 3:
+        return "on the right of the frame"
+    return "in the center"
+
+
+def _with_position(caption: str, position: str):
+    # MOSS swaps characters which are placed by words, the box decides
+    caption = _layout_side.sub("", caption)
+    caption = re.sub(r"\s+([,.;])", r"\1", re.sub(r"\s{2,}", " ", caption))
+    caption = re.sub(r"([,;])(?:\s*[,;])+", r"\1", caption).strip(" ,;:.")
+    return f"{caption}, {position}" if caption else position
+
+
+def moss_layout_items(caption: str, bbox: list[int], position=""):
     """One layout item per region, labeled by an optional "character:"/"object:"/"text:" prefix.
-    Quoted text in the caption becomes an additional "text" item with the same box."""
-    label = "object"
-    if match := _layout_label.match(caption):
-        label = match[1].lower()
-        caption = caption[match.end() :].strip()
+    Quoted text in the caption becomes an additional "text" item with the same box.
+    A `position` replaces left/right words in character captions."""
+    label, caption = _layout_label(caption)
     texts = [next(g for g in m.groups() if g is not None) for m in _layout_quote.finditer(caption)]
     texts = [t.strip() for t in texts if t.strip()]
     items: list[dict[str, Any]] = []
-    if label != "text":
+    if label == "character" and position:
+        items.append({"label": label, "caption": _with_position(caption, position), "bbox": bbox})
+    elif label != "text":
         items.append({"label": label, "caption": caption, "bbox": bbox})
     elif not texts:
         texts = [caption]
@@ -1005,9 +1037,10 @@ def moss_layout_items(caption: str, bbox: list[int]):
 
 def moss_layout_prompt(cond: Conditioning, shape: Extent | ImageReshape = no_reshape):
     """MOSS-Image layout prompt: the global prompt as summary, and an item with the bounding box of
-    each region mask, in pixels of the sampled image. Like ComfyUI's MOSSImageLayoutPrompt node."""
+    each region mask, in pixels of the sampled image. Like ComfyUI's MOSSImageLayoutPrompt node.
+    With two or more characters their captions get the position of the box."""
     summary = merge_prompt(cond.positive.text, cond.style_prompt).strip()
-    items: list[dict[str, Any]] = []
+    regions: list[tuple[str, LayoutBox]] = []
     for region in cond.regions:
         caption = _region_caption(region.positive.text, cond.positive.text)
         box = region.find_layout_box(shape) if caption else None
@@ -1015,7 +1048,12 @@ def moss_layout_prompt(cond: Conditioning, shape: Extent | ImageReshape = no_res
             continue
         if region.loras:
             raise RuntimeError(_("MOSS-Image regions do not support LoRAs, use global LoRAs"))
-        items += moss_layout_items(caption, box.to_yxyx())
+        regions.append((caption, box))
+    characters = sum(1 for caption, _box in regions if _layout_label(caption)[0] == "character")
+    items: list[dict[str, Any]] = []
+    for caption, box in regions:
+        position = _layout_position(box) if characters >= 2 else ""
+        items += moss_layout_items(caption, box.to_yxyx(), position)
     if not items:
         return TextPrompt(summary, "")
     layout = {
@@ -1040,7 +1078,7 @@ def flux3_layout_prompt(cond: Conditioning, shape: Extent | ImageReshape = no_re
             continue
         if region.loras:
             raise RuntimeError(_("FLUX 3 Klein regions do not support LoRAs, use global LoRAs"))
-        if match := _layout_label.match(caption):  # accept the MOSS label syntax
+        if match := _layout_label_prefix.match(caption):  # accept the MOSS label syntax
             caption = caption[match.end() :].strip()
         rows.append({"id": f"obj_{len(rows) + 1}", "bbox": box.to_grid(), "desc": caption})
     if not rows:
