@@ -993,10 +993,11 @@ _layout_side = re.compile(
 
 
 def _layout_label(caption: str):
-    """Label from an optional "character:"/"object:"/"text:" prefix, "character" by default."""
+    """Label from an optional "character:"/"object:"/"text:" prefix. Without one, "object" if the
+    caption quotes text (a sign, a label), otherwise "character"."""
     if match := _layout_label_prefix.match(caption):
         return match[1].lower(), caption[match.end() :].strip()
-    return "character", caption
+    return ("object" if _layout_quote.search(caption) else "character"), caption
 
 
 def _layout_position(box: LayoutBox):

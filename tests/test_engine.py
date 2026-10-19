@@ -696,7 +696,8 @@ class EngineTests(unittest.TestCase):
         self.assertIn("улица", layouts[0])  # ensure_ascii=False, like MOSSImageLayoutPrompt
 
         # Regions are characters by default; two or more get the box position instead of
-        # left/right words. Quoted text adds a text item whatever the label.
+        # left/right words. Quoted text adds a text item and, without a prefix, makes the
+        # region an object (no extra figure).
         bakery = "a bakery sign that says \"BARON'S BAKERY\""
         request["regions"] = [
             {"id": "satyr", "mask": rect_mask(40, 260, 480, 1000), "prompt": "a tall satyr on the right"},
@@ -712,7 +713,7 @@ class EngineTests(unittest.TestCase):
             [
                 ("character", "a tall satyr, on the left of the frame", None),
                 ("character", "a nymph, on the right of the frame", None),
-                ("character", f"{bakery}, in the center", None),
+                ("object", bakery, None),
                 ("text", bakery, "BARON'S BAKERY"),
             ],
         )
