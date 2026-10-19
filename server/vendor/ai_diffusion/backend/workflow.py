@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import json
 import math
 import random
+import re
 from copy import copy
 from dataclasses import dataclass, field
 from typing import Any, NamedTuple
@@ -262,6 +264,55 @@ class ImageReshape(NamedTuple):
 no_reshape = ImageReshape(None, None)
 
 
+class LayoutBox(NamedTuple):
+    """Bounding box of a region mask in pixels of the image which is actually sampled."""
+
+    extent: Extent
+    x0: float
+    y0: float
+    x1: float
+    y1: float
+
+    @staticmethod
+    def from_mask(mask: Image, reshape: Extent | ImageReshape = no_reshape):
+        """Applies the same crop and scale as `ImageOutput.load` to the mask's bounding box."""
+        bounds = mask.mask_bounds()
+        if bounds is None:
+            return None
+        if isinstance(reshape, Extent):
+            reshape = ImageReshape(reshape)
+        box = LayoutBox(
+            mask.extent, bounds.x, bounds.y, bounds.x + bounds.width, bounds.y + bounds.height
+        )
+        if reshape.crop is not None and box.extent == reshape.crop[0]:
+            box = box.crop(reshape.crop[1])
+        target = reshape.target_extent
+        if box is not None and target is not None and box.extent != target:
+            sx, sy = target.width / box.extent.width, target.height / box.extent.height
+            box = LayoutBox(target, box.x0 * sx, box.y0 * sy, box.x1 * sx, box.y1 * sy)
+        return box
+
+    def crop(self, bounds: Bounds):
+        """Box relative to `bounds` (eg. a tile), None if it lies outside."""
+        x0 = min(max(self.x0 - bounds.x, 0), bounds.width)
+        y0 = min(max(self.y0 - bounds.y, 0), bounds.height)
+        x1 = min(max(self.x1 - bounds.x, 0), bounds.width)
+        y1 = min(max(self.y1 - bounds.y, 0), bounds.height)
+        if x1 <= x0 or y1 <= y0:
+            return None
+        return LayoutBox(bounds.extent, x0, y0, x1, y1)
+
+    def to_yxyx(self):
+        """Pixel edges around the box, origin at the image centre, as MOSSImageLayoutPrompt."""
+        w, h = self.extent
+        return [
+            math.floor(round(self.y0, 9)) - h // 2,
+            math.floor(round(self.x0, 9)) - w // 2,
+            math.ceil(round(self.y1, 9)) - h // 2,
+            math.ceil(round(self.x1, 9)) - w // 2,
+        ]
+
+
 class ImageOutput:
     """Wraps an image/mask or the output of a loaded image/mask.
     Allows to consume the image with optional resizing and cropping.
@@ -403,6 +454,8 @@ class Region:
     loras: list[LoraInput] = field(default_factory=list)
     is_background: bool = False
     clip: Clip | None = None
+    # Set when the mask image is replaced by a workflow output (tiles)
+    layout_box: LayoutBox | None = None
 
     @staticmethod
     def from_input(i: RegionInput, index: int, language: str):
@@ -432,8 +485,22 @@ class Region:
         control = [copy(c) for c in self.control]
         loras = copy(self.loras)
         return Region(
-            self.mask, self.bounds, self.positive, control, loras, self.is_background, self.clip
+            self.mask,
+            self.bounds,
+            self.positive,
+            control,
+            loras,
+            self.is_background,
+            self.clip,
+            self.layout_box,
         )
+
+    def find_layout_box(self, shape: Extent | ImageReshape):
+        if self.layout_box is not None:
+            return self.layout_box
+        if self.mask.image is not None:
+            return LayoutBox.from_mask(self.mask.image, shape)
+        return None
 
 
 @dataclass
@@ -444,6 +511,9 @@ class Conditioning:
     regions: list[Region] = field(default_factory=list)
     style_prompt: str = ""
     edit_reference: bool = False
+    # MOSS-Image: regions are encoded as a layout JSON prompt instead of attention masks.
+    # Set by `apply_attention_mask` for the extent of each pass, not copied.
+    layout: TextPrompt | None = None
 
     @staticmethod
     def from_input(i: ConditioningInput, sampling: SamplingInput | None):
@@ -785,6 +855,12 @@ def encode_prompt(
         )
         return prompt, None
 
+    if cond.layout is not None:
+        positive = cond.layout.encode(w, clip, None, ref_images)
+        negative = cond.negative.encode(w, clip) if cond.negative else positive
+        prompt = ConditioningOutput(positive, negative)
+        return apply_reference_conditioning(w, prompt, image, cond, vae, arch, tiled_vae)
+
     if len(cond.regions) <= 1 or all(len(r.loras) == 0 for r in cond.regions):
         if arch is Arch.qwen2:
             positive = cond.positive.prepare(w, cond.style_prompt)
@@ -837,6 +913,10 @@ def apply_attention_mask(
         cond.control += region.control
         return model, None
 
+    if clip.arch is Arch.moss:
+        cond.layout = moss_layout_prompt(cond, shape)
+        return model, None
+
     bottom_region = cond.regions[0]
     if bottom_region.is_background:
         regions = w.background_region(bottom_region.encode_prompt(w, clip, cond.style_prompt))
@@ -852,6 +932,64 @@ def apply_attention_mask(
 
     model = w.attention_mask(model, regions)
     return model, regions
+
+
+_layout_label = re.compile(r"^\s*(character|object|text)\s*:\s*", re.IGNORECASE)
+_layout_quote = re.compile(r'"([^"]+)"|“([^”]+)”|«([^»]+)»')
+
+
+def _region_caption(region_prompt: str, global_prompt: str):
+    # Regions created in Krita have the global prompt appended, it is in the summary already
+    caption, global_prompt = region_prompt.strip(), global_prompt.strip()
+    if global_prompt:
+        if caption == global_prompt:
+            return ""  # background
+        if caption.endswith(f", {global_prompt}"):
+            caption = caption[: -len(global_prompt) - 2]
+    return caption.strip()
+
+
+def moss_layout_items(caption: str, bbox: list[int]):
+    """One layout item per region, labeled by an optional "character:"/"object:"/"text:" prefix.
+    Quoted text in the caption becomes an additional "text" item with the same box."""
+    label = "object"
+    if match := _layout_label.match(caption):
+        label = match[1].lower()
+        caption = caption[match.end() :].strip()
+    texts = [next(g for g in m.groups() if g is not None) for m in _layout_quote.finditer(caption)]
+    texts = [t.strip() for t in texts if t.strip()]
+    items: list[dict[str, Any]] = []
+    if label != "text":
+        items.append({"label": label, "caption": caption, "bbox": bbox})
+    elif not texts:
+        texts = [caption]
+    for text in texts:
+        items.append({"label": "text", "caption": caption, "text": text, "bbox": bbox})
+    return items
+
+
+def moss_layout_prompt(cond: Conditioning, shape: Extent | ImageReshape = no_reshape):
+    """MOSS-Image layout prompt: the global prompt as summary, and an item with the bounding box of
+    each region mask, in pixels of the sampled image. Like ComfyUI's MOSSImageLayoutPrompt node."""
+    summary = merge_prompt(cond.positive.text, cond.style_prompt).strip()
+    items: list[dict[str, Any]] = []
+    for region in cond.regions:
+        caption = _region_caption(region.positive.text, cond.positive.text)
+        box = region.find_layout_box(shape) if caption else None
+        if box is None:
+            continue
+        if region.loras:
+            raise RuntimeError(_("MOSS-Image regions do not support LoRAs, use global LoRAs"))
+        items += moss_layout_items(caption, box.to_yxyx())
+    if not items:
+        return TextPrompt(summary, "")
+    layout = {
+        "summary": {"caption": summary},
+        "items": items,
+        "bbox_coord_space": "abs_centralized",
+        "bbox_format": "yxyx",
+    }
+    return TextPrompt(json.dumps(layout, ensure_ascii=False, separators=(",", ":")), "")
 
 
 def apply_control(
@@ -1660,10 +1798,15 @@ def upscale_tiled(
         img = w.extract_image_tile(img, tile_layout, index)
         return Control(control.mode, ImageOutput(img), None, control.strength, control.range)
 
-    def tiled_region(region: Region, index: int, tile_bounds: Bounds):
+    is_layout = models.arch is Arch.moss
+    layout_boxes = [r.find_layout_box(extent.initial) if is_layout else None for r in cond.regions]
+
+    def tiled_region(region: Region, index: int, tile_bounds: Bounds, layout_box: LayoutBox | None):
         region_bounds = Bounds.scale(region.bounds, upscale_factor)
         coverage = Bounds.intersection(tile_bounds, region_bounds).area / tile_bounds.area
         if coverage > 0.1:
+            if is_layout:
+                region.layout_box = layout_box.crop(tile_bounds) if layout_box else None
             if region.mask:
                 mask = region.mask.load(w, extent.initial)
                 mask = w.extract_mask_tile(mask, tile_layout, index)
@@ -1679,7 +1822,9 @@ def upscale_tiled(
         tile_mask = w.generate_tile_mask(tile_layout, i)
 
         tile_cond = cond.copy()
-        regions = [tiled_region(r, i, bounds) for r in tile_cond.regions]
+        regions = [
+            tiled_region(r, i, bounds, box) for r, box in zip(tile_cond.regions, layout_boxes)
+        ]
         tile_cond.regions = [r for r in regions if r is not None]
         tile_model, regions = apply_attention_mask(w, model, tile_cond, clip)
         tile_model = apply_regional_ip_adapter(w, tile_model, tile_cond.regions, no_reshape, models)

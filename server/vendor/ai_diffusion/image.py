@@ -581,6 +581,27 @@ class Image:
         avg = avg[0] if isinstance(avg, tuple) else avg
         return avg / 255
 
+    def mask_bounds(self, threshold=128):
+        """Bounding box of the mask pixels with value >= `threshold`, None if there are none."""
+        img = self._qimage
+        if not self.is_mask:
+            img = img.convertToFormat(QImage.Format.Format_Grayscale8)
+        width = img.width()
+        table = bytes(0 if v < threshold else 1 for v in range(256))
+        x0, y0, x1, y1 = width, -1, 0, 0
+        for y in range(img.height()):
+            ptr = ensure(img.constScanLine(y), "Accessing data of invalid image")
+            row = ptr.asstring(width).translate(table)
+            first = row.find(1)
+            if first >= 0:
+                y0 = y if y0 < 0 else y0
+                y1 = y + 1
+                x0 = min(x0, first)
+                x1 = max(x1, row.rfind(1) + 1)
+        if y0 < 0:
+            return None
+        return Bounds(x0, y0, x1 - x0, y1 - y0)
+
     @property
     def data(self):
         self.to_krita_format()

@@ -5,7 +5,7 @@
     "ai_diffusion/eventloop.py": "f8eede32419d92054eedcc0bbcdef21c897cb3f30fffce371f0a3a4bed88c69e",
     "ai_diffusion/extension.py": "e7d532e8bc7ad01a21da4058fc15fe4324b6dfdf80d4f80ffc87529d2932a1d4",
     "ai_diffusion/files.py": "23b1852787a1a050b7d274492c76dc8b8dfc83b320616ce70929ac5cf4cf2f6e",
-    "ai_diffusion/image.py": "cb1fb10602f158301703747d271402f0dfe925333553421e1736bf0347defa16",
+    "ai_diffusion/image.py": "9d99f93cdede5a4d32e3350be536895eb4f9ff9a0bd1e543013fa9e5f0446287",
     "ai_diffusion/layer.py": "06734fdcb20dac1b0fb1c0c47588cfa548dcdff52da45cc8954370e261e66e0b",
     "ai_diffusion/localization.py": "a9832299920821d2e4fa3fc79445ddd7fb7717ba9664caf1492fc2684585f092",
     "ai_diffusion/persistence.py": "0314315c272662c82c7475a638a24decbd6ee7abf152c3a9f435f5cdde5bbddc",
@@ -26,9 +26,9 @@
     "ai_diffusion/backend/network.py": "fbd29b08434c3d03928a580c7735f1c3e1851c41ccfa942229b0f856b0eeac0f",
     "ai_diffusion/backend/orchestrion_client.py": "51bb7b82d5307deb44ce782c1c6c5837cfee7b82310eca42f3d815759082a2b3",
     "ai_diffusion/backend/resolution.py": "d9e64c3fce6fade8f79335689b1822a9f816bee7124adc43ee4c54c3f072c9b4",
-    "ai_diffusion/backend/resources.py": "0633f35d4d596ba27c8fa248ece76385844fd041a71c0de054d319d13b097235",
+    "ai_diffusion/backend/resources.py": "cdd1758d878dc729642ff2884875949cd2763b4d0ec79191ec4636ae091156bc",
     "ai_diffusion/backend/server.py": "0d8db6261e8e6bf2a33f7f5807c85bb9f414b7abf151fa54361a26a2f82b7d35",
-    "ai_diffusion/backend/workflow.py": "bffa6fca6d2450721ba6d26ccd1a0a4808a5cd66926d919cb7570d68f3bd89f1",
+    "ai_diffusion/backend/workflow.py": "1576c8de183ec4e762436c32c0760c57ae932eebe8026643daa679db62c86c65",
     "ai_diffusion/backend/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "ai_diffusion/language/en.json": "de7ac7f50a18f81b6b493e241eef42403282c911cdb52fe0539da219b3f1fbc5",
     "ai_diffusion/language/es-ca.json": "8295237b2fe58cb512d372336b6933863ade2463a1feb5105bbb51e2bc6a2276",
@@ -435,6 +435,7 @@
   "patches": [
     "Preserve soft compositing mask when inpaint blend is zero",
     "Krea 2 Identity and General Edit V2 selection, node capability checks, reference placement",
-    "MOSS-Image architecture: Qwen3.5 9B encoder, Flux 2 VAE/latent, skip-layer guidance, model-only LoRA"
+    "MOSS-Image architecture: Qwen3.5 9B encoder, Flux 2 VAE/latent, skip-layer guidance, model-only LoRA",
+    "MOSS-Image regions as a layout JSON prompt (MOSSImageLayoutPrompt format)"
   ]
 }

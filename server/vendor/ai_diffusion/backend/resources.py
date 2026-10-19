@@ -193,7 +193,8 @@ class Arch(Enum):
 
     @property
     def supports_regions(self):
-        return self in [Arch.sd15, Arch.sdxl, Arch.illu, Arch.illu_v, Arch.anima]
+        # MOSS-Image: regions become a layout JSON prompt instead of attention masks
+        return self in [Arch.sd15, Arch.sdxl, Arch.illu, Arch.illu_v, Arch.anima, Arch.moss]
 
     @property
     def supports_lcm(self):

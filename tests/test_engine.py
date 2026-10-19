@@ -649,6 +649,52 @@ class EngineTests(unittest.TestCase):
                 self.assertFalse(any("ControlNet" in t or "Fooocus" in t for t in types))
                 self.assertFalse(any(t.startswith("ModelSampling") for t in types))
 
+    def test_moss_regions_become_layout_prompt(self):
+        def rect_mask(x0, y0, x1, y1):
+            value = QImage(1024, 1024, QImage.Format_Grayscale8)
+            value.fill(0)
+            for y in range(y0, y1):
+                for x in range(x0, x1):
+                    value.setPixel(x, y, qRgba(255, 255, 255, 255))
+            data = QBuffer()
+            data.open(QIODevice.OpenModeFlag.WriteOnly)
+            value.save(data, "PNG")
+            return base64.b64encode(bytes(data.data())).decode()
+
+        girl = "a red-haired girl in a green cloak"
+        sign = 'a wooden tavern sign that says "TAVERN"'
+        request = {
+            "mode": "generate",
+            "prompt": "улица в сумерках",
+            "negative": "blurry",
+            "regions": [
+                {"id": "girl", "mask": rect_mask(40, 100, 460, 900), "prompt": f"character: {girl}"},
+                {"id": "sign", "mask": rect_mask(560, 50, 960, 350), "prompt": sign},
+            ],
+        }
+        graph = self.compile_moss(request)["prompt"]
+        types = {node["class_type"] for node in graph.values()}
+        self.assertFalse(types & {"ETN_AttentionMask", "ETN_DefineRegion", "ETN_BackgroundRegion"})
+        texts = [n["inputs"]["text"] for n in graph.values() if n["class_type"] == "CLIPTextEncode"]
+        self.assertIn("blurry", texts)
+        layouts = [t for t in texts if t.startswith("{")]
+        self.assertEqual(len(layouts), 1)
+        sign_box = [50 - 512, 560 - 512, 350 - 512, 960 - 512]
+        self.assertEqual(
+            json.loads(layouts[0]),
+            {
+                "summary": {"caption": "улица в сумерках"},
+                "items": [
+                    {"label": "character", "caption": girl, "bbox": [-412, -472, 388, -52]},
+                    {"label": "object", "caption": sign, "bbox": sign_box},
+                    {"label": "text", "caption": sign, "text": "TAVERN", "bbox": sign_box},
+                ],
+                "bbox_coord_space": "abs_centralized",
+                "bbox_format": "yxyx",
+            },
+        )
+        self.assertIn("улица", layouts[0])  # ensure_ascii=False, like MOSSImageLayoutPrompt
+
 
 if __name__ == "__main__":
     unittest.main()
