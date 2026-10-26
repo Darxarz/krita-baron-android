@@ -22,13 +22,13 @@
     "ai_diffusion/backend/client.py": "1c734a026068dcab89bd56ab3f7c4cd0fead85b2ef98d134623890aab0fcd4b3",
     "ai_diffusion/backend/cloud_client.py": "4bd9c1bae9bdde8f32cd642eb85260897370411737a6c486256fa989bf255701",
     "ai_diffusion/backend/comfy_client.py": "d291512287cf59e7e1e4963d262cd43b0cc7ca872b57a839f1beafb010acc24d",
-    "ai_diffusion/backend/comfy_workflow.py": "584c907190cb6b364dcba871dfab04cc99b1d976c7180c6f03c5398f05c5dc07",
+    "ai_diffusion/backend/comfy_workflow.py": "3a64a4a2f152556b20dccfe5cfe57c7b45c15231cfaf7979a35caadc8cb558e9",
     "ai_diffusion/backend/network.py": "fbd29b08434c3d03928a580c7735f1c3e1851c41ccfa942229b0f856b0eeac0f",
     "ai_diffusion/backend/orchestrion_client.py": "51bb7b82d5307deb44ce782c1c6c5837cfee7b82310eca42f3d815759082a2b3",
-    "ai_diffusion/backend/resolution.py": "b3ae4f33278c925079296dbf4a00896b78925716061ea85cf125d47adb2ff74a",
+    "ai_diffusion/backend/resolution.py": "75b42a6a23ae261b97edcb9234eb894ef8bc3882a7fc0600b75f11e6cb3addbb",
     "ai_diffusion/backend/resources.py": "a36f10c6bbdf2e1e23ccae26d993e6e077ff8303c8c6a8ba52ffd7947120a78f",
     "ai_diffusion/backend/server.py": "0d8db6261e8e6bf2a33f7f5807c85bb9f414b7abf151fa54361a26a2f82b7d35",
-    "ai_diffusion/backend/workflow.py": "37c28a88624e5fa3d3b2441fb6138a9861ef8271ecff0022a77c8eb7f7577f3f",
+    "ai_diffusion/backend/workflow.py": "db216fcb7061431f50cdec0ce57d3f9e8969f8dc9eebb97be385bb069d202c73",
     "ai_diffusion/backend/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "ai_diffusion/language/en.json": "de7ac7f50a18f81b6b493e241eef42403282c911cdb52fe0539da219b3f1fbc5",
     "ai_diffusion/language/es-ca.json": "8295237b2fe58cb512d372336b6933863ade2463a1feb5105bbb51e2bc6a2276",
@@ -440,6 +440,7 @@
     "MOSS-Image regions as a layout JSON prompt (MOSSImageLayoutPrompt format)",
     "FLUX 3 Klein architecture: Qwen3-VL 4B encoder (flux3), Flux 2 VAE/latent, zeroed negative, ReferenceMultiLatent edits, layout regions, model-only LoRA",
     "MOSS-Image regions default to character, box positions for two or more characters",
-    "MOSS-Image regions with quoted text and no prefix are objects"
+    "MOSS-Image regions with quoted text and no prefix are objects",
+    "FLUX 3 Klein: 1 MP base, 2-pass edits and generation (upscale, 0.3 pass with the same references), canvas reference at the sampled size"
   ]
 }

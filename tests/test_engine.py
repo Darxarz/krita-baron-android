@@ -837,17 +837,78 @@ class EngineTests(unittest.TestCase):
         }
         graph = self.compile_flux3(request)["prompt"]
         refs = [n["inputs"] for n in graph.values() if n["class_type"] == "ReferenceMultiLatent"]
-        self.assertEqual(len(refs), 1)
-        self.assertEqual(refs[0]["resolution"], "resize")
-        self.assertAlmostEqual(refs[0]["resolution.megapixels"], 1.0)
-        images = sorted(k for k in refs[0] if k.startswith("images."))
-        self.assertEqual(images, ["images.image0", "images.image1", "images.image2"])
-        self.assertEqual(graph[refs[0]["negative"][0]]["class_type"], "ConditioningZeroOut")
+        self.assertEqual(len(refs), 2)
+        # The canvas keeps the sampled size, the references are resized to about 1 MP
+        canvas, extra = refs
+        self.assertEqual(canvas["resolution"], "keep resolution")
+        self.assertEqual([k for k in canvas if k.startswith("images.")], ["images.image0"])
+        self.assertEqual(extra["resolution"], "resize")
+        self.assertAlmostEqual(extra["resolution.megapixels"], 1.0)
+        images = sorted(k for k in extra if k.startswith("images."))
+        self.assertEqual(images, ["images.image0", "images.image1"])
+        self.assertEqual(graph[extra["positive"][0]]["inputs"], canvas)
+        self.assertEqual(graph[canvas["negative"][0]]["class_type"], "ConditioningZeroOut")
         self.assertFalse(any(n["class_type"] == "ReferenceLatent" for n in graph.values()))
         texts = [n["inputs"]["text"] for n in graph.values() if n["class_type"] == "CLIPTextEncode"]
         self.assertEqual(texts, [request["prompt"]])
         with self.assertRaisesRegex(ValueError, "ReferenceMultiLatent"):
             self.compile_flux3(request, reference_node=False)
+
+    def flux3_two_pass(self, graph, canvas):
+        """Asserts a ~1 MP base pass, upscale to the canvas and a 0.3 pass with the same
+        conditioning. Returns that conditioning node."""
+        samplers = [n["inputs"] for n in graph.values() if n["class_type"] == "SamplerCustomAdvanced"]
+        self.assertEqual(len(samplers), 2)
+        guiders = [graph[s["guider"][0]]["inputs"] for s in samplers]
+        self.assertEqual(guiders[0]["conditioning"], guiders[1]["conditioning"])
+        self.assertEqual(graph[samplers[0]["sigmas"][0]]["class_type"], "BasicScheduler")
+        split = graph[samplers[1]["sigmas"][0]]
+        self.assertEqual(split["class_type"], "SplitSigmas")
+        self.assertEqual(split["inputs"]["step"], 11)  # 0.3 of 16 steps
+        self.assertEqual(graph[split["inputs"]["sigmas"][0]]["inputs"]["steps"], 16)
+        encode = graph[samplers[1]["latent_image"][0]]
+        scaled = graph[encode["inputs"]["pixels"][0]]
+        self.assertEqual(scaled["class_type"], "ImageScale")
+        self.assertEqual((scaled["inputs"]["width"], scaled["inputs"]["height"]), canvas)
+        upscaled = graph[scaled["inputs"]["image"][0]]
+        self.assertEqual(upscaled["class_type"], "ImageUpscaleWithModel")
+        return graph[guiders[0]["conditioning"][0]]
+
+    def test_flux3_large_edit_uses_two_passes_with_same_references(self):
+        canvas = QImage(1408, 1408, QImage.Format_ARGB32)
+        canvas.fill(qRgba(110, 70, 130, 255))
+        data = QBuffer()
+        data.open(QIODevice.OpenModeFlag.WriteOnly)
+        canvas.save(data, "PNG")
+        request = {
+            "mode": "edit",
+            "width": 1408,
+            "height": 1408,
+            "image": base64.b64encode(bytes(data.data())).decode(),
+            "references": [image()],
+            "prompt": "make it night",
+        }
+        graph = self.compile_flux3(request)["prompt"]
+        cond = self.flux3_two_pass(graph, (1408, 1408))
+        self.assertEqual(cond["class_type"], "ReferenceMultiLatent")
+        refs = [n["inputs"] for n in graph.values() if n["class_type"] == "ReferenceMultiLatent"]
+        self.assertEqual(refs[0]["resolution"], "keep resolution")
+        self.assertEqual(cond["inputs"], refs[1])
+        # Base pass: the canvas is sampled and referenced at 1024x1024 (about 1 MP)
+        samplers = [n["inputs"] for n in graph.values() if n["class_type"] == "SamplerCustomAdvanced"]
+        base = graph[graph[samplers[0]["latent_image"][0]]["inputs"]["pixels"][0]]
+        self.assertEqual(graph[refs[0]["images.image0"][0]], base)
+        self.assertEqual(base["class_type"], "ETN_LoadImageBase64")
+        sampled = QImage.fromData(base64.b64decode(base["inputs"]["image"]))
+        self.assertEqual((sampled.width(), sampled.height()), (1024, 1024))
+        texts = [n["inputs"]["text"] for n in graph.values() if n["class_type"] == "CLIPTextEncode"]
+        self.assertEqual(texts, ["make it night"])
+
+    def test_flux3_large_generate_uses_two_passes(self):
+        graph = self.compile_flux3({"mode": "generate", "width": 1408, "height": 1408})["prompt"]
+        latent = next(n["inputs"] for n in graph.values() if n["class_type"] == "EmptyFlux2LatentImage")
+        self.assertEqual((latent["width"], latent["height"]), (1024, 1024))
+        self.flux3_two_pass(graph, (1408, 1408))
 
     def test_flux3_selection_uses_differential_diffusion_and_high_strength(self):
         for mode, inpaint in (("generate", None), ("edit", {"mode": "custom", "fill": "neutral"})):

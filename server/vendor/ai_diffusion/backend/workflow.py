@@ -620,8 +620,12 @@ def apply_reference_conditioning(
                 raise RuntimeError(
                     _("FLUX 3 Klein supports up to 10 reference images, including the canvas")
                 )
-            if refs:
-                prompt = w.reference_multi_latent(prompt, vae, refs)
+            if cond.edit_reference and input_image:
+                # The canvas is scaled to the sampled extent already. Keep it at that size: an
+                # output larger than its reference drifts and loses the edit.
+                prompt = w.reference_multi_latent(prompt, vae, [input_image], megapixels=None)
+            if extra_images:
+                prompt = w.reference_multi_latent(prompt, vae, extra_images)
         case Arch.flux_k | Arch.qwen_e:
             if len(extra_images) > 0:
                 if cond.edit_reference and input_image:
@@ -1299,6 +1303,11 @@ def scale_to_target(extent: ScaledExtent, w: ComfyWorkflow, image: Output, model
     return scale(extent.desired, extent.target, extent.target_scaling, w, image, models)
 
 
+def hires_strength(arch: Arch):
+    """Denoise strength of the refinement pass after upscaling."""
+    return 0.3 if arch is Arch.flux3 else 0.4
+
+
 def scale_refine_and_decode(
     extent: ScaledExtent,
     w: ComfyWorkflow,
@@ -1310,10 +1319,12 @@ def scale_refine_and_decode(
     vae: Output,
     models: ModelDict,
     tiled_vae: bool,
+    prompt: ConditioningOutput | None = None,
 ):
     """Handles scaling images from `initial` to `desired` resolution.
     If it is a substantial upscale, runs a high-res SD refinement pass.
-    Takes latent as input and returns a decoded image."""
+    Takes latent as input and returns a decoded image.
+    FLUX 3 reuses `prompt`, the conditioning of the first pass, with the same references."""
 
     arch = models.arch
     mode = extent.refinement_scaling
@@ -1321,8 +1332,11 @@ def scale_refine_and_decode(
         decoded = vae_decode(w, vae, latent, tiled_vae)
         return scale(extent.initial, extent.desired, mode, w, decoded, models)
 
-    model, regions = apply_attention_mask(w, model, cond, clip, extent.desired)
-    model = apply_regional_ip_adapter(w, model, cond.regions, extent.desired, models)
+    reuse_prompt = arch is Arch.flux3 and prompt is not None
+    regions = None
+    if not reuse_prompt:
+        model, regions = apply_attention_mask(w, model, cond, clip, extent.desired)
+        model = apply_regional_ip_adapter(w, model, cond.regions, extent.desired, models)
 
     if mode is ScaleMode.upscale_small:
         upscaler = models.upscale[UpscalerName.fast_2x]
@@ -1334,11 +1348,17 @@ def scale_refine_and_decode(
     decoded = vae_decode(w, vae, latent, tiled_vae)
     upscale = w.upscale_image(upscale_model, decoded, preserve_alpha=arch.supports_alpha)
     upscale = w.scale_image(upscale, extent.desired, preserve_alpha=arch.supports_alpha)
-    params = _sampler_params(sampling, extent.desired, strength=0.4)
+    params = _sampler_params(sampling, extent.desired, strength=hires_strength(arch))
 
-    prompt, new_latent = encode_prompt(w, cond, clip, vae, regions, upscale, tiled_vae)
-    new_latent = new_latent or vae_encode(w, vae, upscale, tiled_vae)
-    model, prompt = apply_control(w, model, prompt, cond.all_control, extent.desired, vae, models)
+    if reuse_prompt:
+        assert prompt is not None
+        new_latent = vae_encode(w, vae, upscale, tiled_vae)
+    else:
+        prompt, new_latent = encode_prompt(w, cond, clip, vae, regions, upscale, tiled_vae)
+        new_latent = new_latent or vae_encode(w, vae, upscale, tiled_vae)
+        model, prompt = apply_control(
+            w, model, prompt, cond.all_control, extent.desired, vae, models
+        )
     result = w.sampler_custom_advanced(model, prompt, new_latent, arch, **params)
     return vae_decode(w, vae, result, tiled_vae)
 
@@ -1378,7 +1398,17 @@ def generate(
     sample_params = _sampler_params(sampling, extent.initial)
     out_latent = w.sampler_custom_advanced(model, prompt, latent, models.arch, **sample_params)
     out_image = scale_refine_and_decode(
-        extent, w, cond, sampling, out_latent, model_orig, clip, vae, models, checkpoint.tiled_vae
+        extent,
+        w,
+        cond,
+        sampling,
+        out_latent,
+        model_orig,
+        clip,
+        vae,
+        models,
+        checkpoint.tiled_vae,
+        prompt,
     )
     out_image = w.nsfw_filter(out_image, sensitivity=misc.nsfw_filter)
     out_image = scale_to_target(extent, w, out_image, models)
@@ -1590,7 +1620,9 @@ def inpaint(
         upscale_mask = cropped_mask
         if crop_upscale_extent != target_bounds.extent:
             upscale_mask = w.scale_mask(cropped_mask, crop_upscale_extent)
-        sampler_params = _sampler_params(sampling, upscale_extent.desired, strength=0.4)
+        sampler_params = _sampler_params(
+            sampling, upscale_extent.desired, strength=hires_strength(models.arch)
+        )
         upscale_model = w.load_upscale_model(upscaler)
         upscale = vae_decode(w, vae, out_latent, checkpoint.tiled_vae)
         upscale = w.crop_image(upscale, initial_bounds)
@@ -1669,6 +1701,7 @@ def refine(
 ):
     model, clip, vae = load_checkpoint_with_lora(w, checkpoint, models.all)
     model = apply_ip_adapter(w, model, cond.control, models)
+    model_orig = copy(model)
     model, regions = apply_attention_mask(w, model, cond, clip, extent.initial)
     model = apply_regional_ip_adapter(w, model, cond.regions, extent.initial, models)
     in_image = w.load_image(image, alpha=models.arch.supports_alpha)
@@ -1687,13 +1720,29 @@ def refine(
         latent = w.empty_latent_image(extent.desired, models.arch, misc.batch_count)
     latent = latent or vae_encode(w, vae, in_image, checkpoint.tiled_vae)
     latent_batch = w.batch_latent(latent, misc.batch_count)
-    latent_batch = setup_latent_layers(w, latent_batch, extent.desired, misc.layer_count)
-    model, prompt = apply_control(w, model, prompt, cond.all_control, extent.desired, vae, models)
-    model = apply_krea_edit(w, model, checkpoint, cond, vae, latent_batch, extent.desired, in_image)
-    sampler_params = _sampler_params(sampling, extent.desired)
+    # The initial extent equals desired unless 2 passes are used (FLUX 3 on large canvases)
+    latent_batch = setup_latent_layers(w, latent_batch, extent.initial, misc.layer_count)
+    model, prompt = apply_control(w, model, prompt, cond.all_control, extent.initial, vae, models)
+    model = apply_krea_edit(w, model, checkpoint, cond, vae, latent_batch, extent.initial, in_image)
+    sampler_params = _sampler_params(sampling, extent.initial)
     sampler = w.sampler_custom_advanced(model, prompt, latent_batch, models.arch, **sampler_params)
     sampler = pack_latent_layers(w, sampler, misc)
-    out_image = vae_decode(w, vae, sampler, checkpoint.tiled_vae)
+    if extent.refinement_scaling in [ScaleMode.upscale_small, ScaleMode.upscale_quality]:
+        out_image = scale_refine_and_decode(
+            extent,
+            w,
+            cond,
+            sampling,
+            sampler,
+            model_orig,
+            clip,
+            vae,
+            models,
+            checkpoint.tiled_vae,
+            prompt,
+        )
+    else:
+        out_image = vae_decode(w, vae, sampler, checkpoint.tiled_vae)
     out_image = w.nsfw_filter(out_image, sensitivity=misc.nsfw_filter)
     out_image = scale_to_target(extent, w, out_image, models)
     w.send_image(out_image)
@@ -1750,7 +1799,17 @@ def refine_region(
         inpaint_model, prompt, latent, models.arch, **sampler_params
     )
     out_image = scale_refine_and_decode(
-        extent, w, cond, sampling, out_latent, model_orig, clip, vae, models, checkpoint.tiled_vae
+        extent,
+        w,
+        cond,
+        sampling,
+        out_latent,
+        model_orig,
+        clip,
+        vae,
+        models,
+        checkpoint.tiled_vae,
+        prompt,
     )
     out_image = w.color_match(
         out_image,
@@ -2255,8 +2314,11 @@ def prepare(
 
     elif kind is WorkflowKind.refine:
         assert isinstance(canvas, Image) and style
+        # FLUX 3 Klein samples around 1 MP: large canvases are edited there, then upscaled
+        # and refined with the same references
+        allow_2pass = arch is Arch.flux3 and strength >= 0.7 and not is_live
         i.images, i.batch_count = resolution.prepare_image(
-            canvas, arch, style, perf, downscale=False
+            canvas, arch, style, perf, downscale=allow_2pass
         )
         downscale_all_control_images(i.conditioning, canvas.extent, i.images.extent.desired)
 

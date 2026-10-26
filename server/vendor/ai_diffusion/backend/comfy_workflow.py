@@ -675,18 +675,26 @@ class ComfyWorkflow:
         return self.add("ReferenceLatent", 1, conditioning=conditioning, latent=latent)
 
     def reference_multi_latent(
-        self, cond: ConditioningOutput, vae: Output, images: list[Output], megapixels=1.0
+        self,
+        cond: ConditioningOutput,
+        vae: Output,
+        images: list[Output],
+        megapixels: float | None = 1.0,
     ):
-        """Encodes each image (resized to `megapixels`) and appends it to positive and negative."""
+        """Encodes each image (resized to `megapixels`, or at its size if None) and appends it
+        to positive and negative."""
         inputs: dict[str, Any] = {f"images.image{i}": image for i, image in enumerate(images)}
+        if megapixels is None:
+            inputs["resolution"] = "keep resolution"
+        else:
+            inputs["resolution"] = "resize"
+            inputs["resolution.megapixels"] = megapixels
         positive, negative, _ = self.add(
             "ReferenceMultiLatent",
             3,
             positive=cond.positive,
             negative=cond.negative,
             vae=vae,
-            resolution="resize",
-            **{"resolution.megapixels": megapixels},
             **inputs,
         )
         return ConditioningOutput(positive, negative)

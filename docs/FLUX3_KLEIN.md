@@ -13,7 +13,9 @@ FLUX 3 Image Klein (Black Forest Labs, distilled) generates and edits images wit
 
 ## Workflow
 
-- `EmptyFlux2LatentImage`, sides aligned to 16, between 512 and 2048 px, at most 2048² pixels.
+- Base resolution about 1 MP (sides aligned to 16, at least 512 px, at most 1024² pixels), independent of the general pixel limit. At 2 MP the model produces single-pixel colour noise, chopped shapes and weak edits.
+- Larger canvases use 2 passes for generate, edit (refine at strength 0.7 or more), selection edits (strength 0.7 or more) and inpaint: the base pass at about 1 MP, the plugin's upscaler (OmniSR 2x for factors below 1.5), a resize to the exact canvas size, then a second pass at strength 0.3 (5 of 16 steps) with the same conditioning and references as the base pass.
+- `EmptyFlux2LatentImage` for generation.
 - Style `FLUX 3 Klein` with sampler preset `FLUX 3 Klein - Euler`: euler / simple, 16 steps (minimum 8 when the strength is reduced), CFG 1. Steps between 8 and 30 work.
 - The negative prompt is not used: the unconditional is `ConditioningZeroOut` of the positive (only sampled when CFG is above 1).
 - No `ModelSampling*` nodes. LoRAs are applied to the model only (`LoraLoaderModelOnly`).
@@ -21,10 +23,10 @@ FLUX 3 Image Klein (Black Forest Labs, distilled) generates and edits images wit
 
 ## Edit and references
 
-- With the canvas as edit reference, and/or reference control layers (Reference, Style, Composition, Face, and Scribble/Line art/Canny/Depth/Pose as instructions), all images go into one `ReferenceMultiLatent` node, each resized to about 1 MP, appended to the positive and the zeroed negative. At most 10 images, including the canvas.
+- The canvas (edit reference) goes into a `ReferenceMultiLatent` with `keep resolution`: it is already scaled to the sampled base size, so output and reference match (a 1408² output with a 1 MP reference drifted 10-19 px to the right). Reference control layers (Reference, Style, Composition, Face, and Scribble/Line art/Canny/Depth/Pose as instructions) follow in a second `ReferenceMultiLatent`, each resized to about 1 MP. Both are appended to the positive and the zeroed negative. At most 10 images, including the canvas.
 - The prompt names them `<ref_image_0>`, `<ref_image_1>`, … in order: the canvas is `<ref_image_0>` when it is a reference, control layers follow. Generated instructions use these names, e.g. `Apply the style from <ref_image_1>.`
 - Write a full caption of the result with the edit folded in.
-- The output size follows the canvas, `ReferenceMultiLatent`'s empty latent is not used.
+- The output size follows the canvas (base pass, then 2 passes as above), `ReferenceMultiLatent`'s empty latent is not used.
 
 ## Regions
 
