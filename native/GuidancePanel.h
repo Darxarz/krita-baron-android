@@ -19,6 +19,8 @@ public:
     QJsonObject input(const QRect& bounds, const QImage& selection, QString* error);
     void setControlLayer(const QString& id, const QString& controlId = {});
     QJsonObject state() const;
+    QPlainTextEdit* activePrompt() const;
+    QList<QImage> referenceImages(QString* error) const;
     void restoreState(const QJsonObject& state);
     void setRootEditors(QPlainTextEdit* positive, QPlainTextEdit* negative);
     void activateRegion(const QString& id);

@@ -6,6 +6,8 @@
 #include "PromptActions.h"
 #include "ModelCatalog.h"
 #include "Localization.h"
+#include "KadanceDialog.h"
+#include "OrchestrionClient.h"
 #include <QApplication>
 #include <QTemporaryDir>
 #include <QSettings>
@@ -91,6 +93,23 @@ int main(int argc, char** argv) {
     palette.setColor(QPalette::HighlightedText, Qt::white);
     if (!app.arguments().contains("--light"))
         app.setPalette(palette);
+    if (app.arguments().contains("--kadance-preview")) {
+        BaronLocalization::install();
+        QWidget parent;
+        OrchestrionClient connection;
+        connection.setRoot("https://orchestrion.ink");
+        QString prompt = "Keep the pose; correct the coat color from the reference.";
+        QImage first(240, 160, QImage::Format_RGB32), second(first);
+        first.fill(QColor("#816647")); second.fill(QColor("#e1ad63"));
+        auto dialog = showKadanceDialog(&parent, &connection,
+            {{"model", "FLUX3/flux3-klein.safetensors"}, {"architecture", "flux3-klein"}, {"mode", "edit"}},
+            {{"canvas", first}, {"reference", second}}, [&prompt] { return prompt; },
+            [&prompt](const QString& value) { prompt = value; return true; });
+        dialog->findChild<PromptEditor*>("kadanceInstruction")->replacePromptText(
+            "Сохрани позу и фон первого изображения, но исправь цвет шерсти по второму референсу.");
+        QTimer::singleShot(250, dialog, [&app, dialog] { app.exit(dialog->grab().save(app.arguments().last()) ? 0 : 1); });
+        return app.exec();
+    }
     if (app.arguments().contains("--catalog-preview")) {
         BaronLocalization::install();
         ModelCatalog catalog; catalog.resize(1280,850);
