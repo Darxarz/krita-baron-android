@@ -131,4 +131,6 @@ void setIcon(QAbstractButton* button, const QString& name);
 void refresh(QWidget* widget);
 void copyText(const QString& text);
 QString architectureIcon(const QString& family);
+QString architectureId(const QString& value);
+QString architectureId(const QJsonObject& model);
 }

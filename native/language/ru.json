@@ -493,6 +493,7 @@
     "The proposed prompt will appear here. You can edit it before inserting.": "Здесь появится предложенный промпт. Его можно исправить перед вставкой.",
     "Undo insertion": "Отменить вставку",
     "Use this prompt": "Использовать промпт",
-    "Select an available model before asking Kadance": "Перед обращением к Кадансу выбери доступную модель"
+    "Select an available model before asking Kadance": "Перед обращением к Кадансу выбери доступную модель",
+    "Not available for this model: it has no inpaint model": "Недоступно для этой модели: у неё нет модели инпейнта"
   }
 }

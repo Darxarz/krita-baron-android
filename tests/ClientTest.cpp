@@ -465,6 +465,42 @@ private slots:
         widget.setCapabilities("qwen",1,false);QVERIFY(widget.findChild<QCheckBox*>("inpaintSeamless")->isEnabled());
         widget.setCapabilities("sdxl",1,false);QVERIFY(widget.findChild<QComboBox*>("inpaintFill")->isEnabled());
     }
+    void seamlessFollowsModelAndKeepsUserChoice() {
+        // Website catalogs send human family names; engine discovery sends Arch ids
+        QCOMPARE(PluginUi::architectureId("Flux"),QString("flux"));
+        QCOMPARE(PluginUi::architectureId("SD 1.5"),QString("sd15"));
+        QCOMPARE(PluginUi::architectureId("Z-Image"),QString("zimage"));
+        QCOMPARE(PluginUi::architectureId("Illustrious"),QString("illu"));
+        QCOMPARE(PluginUi::architectureId("Pony"),QString("sdxl"));
+        QCOMPARE(PluginUi::architectureId("Qwen Image 2.1"),QString("qwen2"));
+        QCOMPARE(PluginUi::architectureId("FLUX 3 Klein"),QString("flux3"));
+        QCOMPARE(PluginUi::architectureId("moss-image"),QString("moss"));
+        QCOMPARE(PluginUi::architectureId("krea2"),QString("krea2"));
+        QCOMPARE(PluginUi::architectureId(QJsonObject{{"family","Illustrious"},{"arch","sdxl"}}),QString("illu"));
+        QCOMPARE(PluginUi::architectureId(QJsonObject{{"family","Something New"},{"arch","moss-image"}}),QString("moss"));
+        QCOMPARE(PluginUi::architectureId(QJsonObject{{"architecture","zimage"},{"family","whatever"}}),QString("zimage"));
+        InpaintWidget widget;
+        auto seamless=widget.findChild<QCheckBox*>("inpaintSeamless");
+        for(const auto& family:{"Flux","SD 1.5","Z-Image","Illustrious","sdxl","Qwen Image","anima"}){
+            widget.setCapabilities(family,1,false);
+            QVERIFY2(seamless->isEnabled(),family);QVERIFY2(seamless->isChecked(),family);
+        }
+        seamless->click();
+        QVERIFY(!seamless->isChecked());QVERIFY(!widget.state()["use_inpaint_model"].toBool());
+        for(const auto& family:{"Krea 2","FLUX 3 Klein","MOSS-Image","Qwen Image 2.1","Flux 2 Klein 9B"}){
+            widget.setCapabilities(family,1,false);
+            QVERIFY2(!seamless->isEnabled(),family);QVERIFY2(!seamless->isChecked(),family);
+        }
+        widget.setCapabilities("Flux",1,false);
+        QVERIFY(seamless->isEnabled());QVERIFY(!seamless->isChecked()); // the user's "off" is kept
+        seamless->click();QVERIFY(widget.state()["use_inpaint_model"].toBool());
+        widget.setCapabilities("Krea 2",1,false);
+        QVERIFY(!seamless->isChecked());QVERIFY(!widget.state()["use_inpaint_model"].toBool());
+        widget.setCapabilities("Flux",1,false);QVERIFY(seamless->isChecked()); // and "on" comes back
+        widget.setCapabilities("Krea 2",1,false);
+        widget.restore({{"use_inpaint_model",true}});QVERIFY(!seamless->isChecked());
+        widget.setCapabilities("sdxl",1,false);QVERIFY(seamless->isChecked());
+    }
     void orientationProfilesReachDiskAndLateDockRestores() {
         QSettings settings("BaronEdition","Orchestrion");settings.remove("orientation_layout");settings.sync();
         QMainWindow window;window.resize(700,500);window.setCentralWidget(new QWidget(&window));

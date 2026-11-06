@@ -883,7 +883,7 @@ BaronPanel::BaronPanel(CanvasHost* host, QWidget* parent, PromptEditor::Completi
         for (auto value : m_catalog) {
             const auto model = value.toObject();
             if (model["name"].toString() == m_model->currentData().toString()) {
-                architecture = model["architecture"].toString(model["family"].toString());
+                architecture = PluginUi::architectureId(model);
                 break;
             }
         }
@@ -2041,7 +2041,7 @@ void BaronPanel::updateMode() {
         const bool selection=m_host&&m_host->hasSelection();
         m_inpaint->setVisible(!upscale&&selection&&m_inpaintMode=="custom");
         const auto info=m_model->currentData(Qt::UserRole+1).toJsonObject();
-        m_inpaint->setCapabilities(info["architecture"].toString(info["family"].toString()),m_strength->value(),mode=="edit");
+        m_inpaint->setCapabilities(PluginUi::architectureId(info),m_strength->value(),mode=="edit");
     }
     m_upscale->setVisible(upscale);
     m_upscale->upscaler->setVisible(upscale);

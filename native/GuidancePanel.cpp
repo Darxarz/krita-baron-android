@@ -683,16 +683,7 @@ void GuidancePanel::updateRegions() {
     }
 }
 void GuidancePanel::setArchitecture(const QString& family) {
-    QString arch = family.toLower();
-    if (arch == "illustrious" || arch == "illustrious xl") arch = "illu";
-    else if (arch == "pony") arch = "sdxl";
-    else if (arch == "sd1.5" || arch == "sd 1.5") arch = "sd15";
-    else if (arch == "qwen21" || arch == "qwen-image21" || arch == "qwen image 2.1") arch = "qwen2";
-    else if (arch == "krea 2") arch = "krea2";
-    else if (arch == "moss-image" || arch == "moss image" || arch == "moss_image") arch = "moss";
-    else if (arch == "flux 3 klein" || arch == "flux3-klein" || arch == "flux3_klein") arch = "flux3";
-    else if (arch == "flux 2 klein 9b") arch = "flux2_9b";
-    else if (arch == "flux 2 klein 4b") arch = "flux2_4b";
+    const QString arch = PluginUi::architectureId(family);
     if (arch == m_architecture) return;
     m_architecture = arch;
     for (auto row : m_controls) {

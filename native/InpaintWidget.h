@@ -24,4 +24,5 @@ Q_SIGNALS:
 private:
     QCheckBox *m_seamless, *m_focus, *m_edit;
     QComboBox *m_fill, *m_context;
+    bool m_seamlessChoice = true; // user's choice, kept while the model has no inpaint model
 };
