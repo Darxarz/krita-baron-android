@@ -38,6 +38,7 @@ public:
     void modelMetadata(const QString& name, const QString& kind,
         std::function<void(const QJsonObject&, const QString&)> done, bool refresh = false);
     void quote(const QJsonObject& prompt);
+    void assistPrompt(const QJsonObject& input);
     void translatePrompt(const QString& text, const QString& mode, std::function<void(const QJsonObject&)> done,
         const QString& model = {});
     void promptOrganizerCapabilities(std::function<void(const QJsonObject&)> done);
@@ -56,6 +57,7 @@ Q_SIGNALS:
     void lorasReady(const QJsonObject& data);
     void modelsReady(const QJsonObject& catalog);
     void prepared(const QJsonObject& data);
+    void promptAssisted(const QJsonObject& data);
     void quoted(const QJsonObject& data);
     void submitted(const QString& promptId);
     void jobReady(const QJsonObject& data);

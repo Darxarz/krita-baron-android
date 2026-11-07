@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "BaronPanel.h"
+#include "KadanceDialog.h"
 #include "ServiceAddress.h"
 #include "BaronUpdates.h"
 #include "GuidancePanel.h"
@@ -2868,6 +2869,51 @@ private slots:
         reopened.documentChanged();
         QCOMPARE(reopened.findChild<QComboBox*>("referencePurpose")->currentData().toString(), QString("general_v2"));
         QCOMPARE(reopened.findChild<QComboBox*>("referencePlacement")->currentData().toString(), QString("beside (right of target)"));
+    }
+    void kadanceReviewsBeforeApplyingAndPreservesNewerPromptEdits() {
+        PreviewNetwork network;
+        network.responses = {
+            {200, {}, R"({"prompt":"Correct the fur colors while preserving pose.","summary":"Preserve pose","tips":[],"images_used":0})"},
+            {200, {}, R"({"prompt":"A newer proposal","summary":"Review","tips":[],"images_used":0})"}
+        };
+        OrchestrionClient main;
+        QVERIFY(main.setRoot("https://orchestrion.ink")); main.setAccessToken("device-test");
+        QSignalSpy errors(&main, &OrchestrionClient::error);
+        QWidget parent;
+        QString text = "Original <lora:Character:0.8>";
+        const QJsonObject context { { "mode", "edit" }, { "model", "opaque.safetensors" },
+            { "architecture", "qwen-image-2.1" }, { "has_selection", true }, { "strength", 0.6 },
+            { "scope", "region" }, { "reference_purpose", "identity_v2" } };
+        auto dialog = showKadanceDialog(&parent, &main, context, {},
+            [&text] { return text; }, [&text](const QString& value) { text = value; return true; }, &network);
+        auto ask = dialog->findChild<QPushButton*>("kadanceAsk");
+        auto apply = dialog->findChild<QPushButton*>("kadanceApply");
+        dialog->findChild<PromptEditor*>("kadanceInstruction")->replacePromptText("Recolor only the fur");
+        QVERIFY(!apply->isEnabled()); ask->click();
+        QTRY_VERIFY(apply->isEnabled());
+        QCOMPARE(text, QString("Original <lora:Character:0.8>"));
+        QCOMPARE(network.requests.first().url().path(), QString("/api/krita/prompt-assist"));
+        QCOMPARE(network.requests.first().rawHeader("Authorization"), QByteArray("Bearer device-test"));
+        const auto submitted = QJsonDocument::fromJson(network.bodies.first()).object();
+        for (auto it = context.begin(); it != context.end(); ++it) QCOMPARE(submitted[it.key()], it.value());
+        text = "User typed a new prompt"; apply->click();
+        QCOMPARE(text, QString("User typed a new prompt"));
+        ask->click(); QTRY_VERIFY(apply->isEnabled()); apply->click();
+        QCOMPARE(text, QString("A newer proposal"));
+        QCOMPARE(errors.size(), 0);
+        dialog->reject();
+    }
+    void kadanceNetworkFailureDoesNotCancelGenerationClient() {
+        PreviewNetwork network; network.responses = { {503, {}, R"({"error":"Assistant unavailable"})"} };
+        OrchestrionClient main; QVERIFY(main.setRoot("https://orchestrion.ink")); main.setAccessToken("device-test");
+        QSignalSpy errors(&main, &OrchestrionClient::error);
+        QWidget parent;
+        auto dialog = showKadanceDialog(&parent, &main, {}, {}, [] { return QString("prompt"); }, [](const QString&) { return false; }, &network);
+        auto ask = dialog->findChild<QPushButton*>("kadanceAsk"); ask->click();
+        QTRY_VERIFY(ask->isEnabled());
+        QVERIFY(!dialog->findChild<QPushButton*>("kadanceApply")->isEnabled());
+        QCOMPARE(errors.size(), 0); QVERIFY(main.signedIn());
+        dialog->reject();
     }
     void generationAndEditPromptsSurviveSwitchesDocumentsAndRestart() {
         class Host : public CanvasHost {

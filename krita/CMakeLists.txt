@@ -5,6 +5,7 @@ set(BARON_SOURCES
     BaronDocker.cpp
     native/PluginUi.cpp native/plugin-icons.qrc native/BaronPanel.cpp
     native/GuidancePanel.cpp
+    native/KadanceDialog.cpp
     native/InterfaceSettings.cpp
     native/OrientationLayouts.cpp native/InpaintWidget.cpp
     native/AuthorCredits.cpp

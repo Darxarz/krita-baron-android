@@ -556,6 +556,26 @@ void GuidancePanel::setControlLayer(const QString& id, const QString& controlId)
     m_pendingControl.clear();
     emit changed();
 }
+QPlainTextEdit* GuidancePanel::activePrompt() const {
+    for (auto row : m_regions) if (row->id == m_activeRegion) return row->prompt;
+    return m_rootPositive;
+}
+
+QList<QImage> GuidancePanel::referenceImages(QString* error) const {
+    QList<QImage> images;
+    QStringList regions { QString() };
+    for (auto row : m_regions) regions.append(row->id);
+    for (const auto& region : regions) for (auto row : m_controls) {
+        if (!row->supported || row->region->currentData().toString() != region
+            || !QStringList { "reference", "style", "composition", "face" }.contains(row->mode)) continue;
+        const auto image = row->external.isNull() && m_host
+            ? m_host->layerImage(row->layer->currentData().toString(), QRect(), error) : row->external;
+        if (image.isNull()) { if (error->isEmpty()) *error = tr("Choose an image or a Krita layer for each control."); return {}; }
+        images.append(image);
+    }
+    return images;
+}
+
 QJsonObject GuidancePanel::state() const {
     QJsonArray controls, regions;
     for (auto row : m_controls)

@@ -161,6 +161,13 @@ QUrl OrchestrionClient::serviceUrl(const QString& path) const {
     url.setQuery(query);
     return url;
 }
+void OrchestrionClient::assistPrompt(const QJsonObject& input) {
+    if (m_backend != orchestrion || m_token.isEmpty()) {
+        emit error(tr("Sign in to Orchestrion in the connection settings to use Kadance.")); return;
+    }
+    request("/api/krita/prompt-assist", input, true, [this](const QJsonObject& data) { emit promptAssisted(data); });
+}
+
 void OrchestrionClient::copyConnection(const OrchestrionClient& other) {
     setBackend(other.m_backend);
     setRoot(other.m_root.toString());
@@ -190,13 +197,13 @@ void OrchestrionClient::request(
     req.setAttribute(
         QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::ManualRedirectPolicy);
     req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-    req.setTransferTimeout(path == "/api/translate" ? 100000 : path == "/api/prompt/organize/labels" ? 22000 : 60000);
+    req.setTransferTimeout((path == "/api/translate" || path == "/api/krita/prompt-assist") ? 100000 : path == "/api/prompt/organize/labels" ? 22000 : 60000);
     if (!m_token.isEmpty() && (auth || m_backend == comfyui))
         req.setRawHeader("Authorization", "Bearer " + m_token);
     auto reply = post ? m_transport->post(req, QJsonDocument(body).toJson(QJsonDocument::Compact))
                       : m_transport->get(req);
     m_requests.append(reply);
-    const int timeout = path == "/api/translate" ? 100000 : path == "/api/prompt/organize/labels" ? 22000 : m_cancelRequested && !m_submitting ? 15000
+    const int timeout = (path == "/api/translate" || path == "/api/krita/prompt-assist") ? 100000 : path == "/api/prompt/organize/labels" ? 22000 : m_cancelRequested && !m_submitting ? 15000
         : post && (path.endsWith("/prepare") || path.endsWith("/prompt") || path == "/generate") ? 120000 : 60000;
     QTimer::singleShot(timeout, reply, [reply] { if (!reply->isFinished()) reply->abort(); });
     const int generation = m_generation;

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "BaronPanel.h"
+#include "KadanceDialog.h"
 #include "ServiceAddress.h"
 #include "BackgroundWork.h"
 #include "AuthorCredits.h"
@@ -350,6 +351,56 @@ BaronPanel::BaronPanel(CanvasHost* host, QWidget* parent, PromptEditor::Completi
     m_workspace->setMenu(workspaceMenu);
     styleRow->addWidget(m_workspace);
     styleRow->addWidget(m_styles, 1);
+    auto kadance = new QPushButton(tr("Kadance…"), generation);
+    kadance->setObjectName("kadanceButton");
+    kadance->setToolTip(tr("Improve the prompt using the canvas and references"));
+    styleRow->addWidget(kadance);
+    connect(kadance, &QPushButton::clicked, this, [this] {
+        auto editor = QPointer<QPlainTextEdit>(m_guidance->activePrompt());
+        if (!editor) return;
+        const auto document = m_host ? m_host->documentId() : QString();
+        const auto mode = m_mode->currentData().toString();
+        if (mode != "edit" && mode != "generate") return;
+        const bool selected = m_host && m_host->hasSelection();
+        const bool regional = editor != m_prompt;
+        const auto effectiveMode = mode == "edit" ? QString("edit")
+            : selected || regional ? QString("inpaint") : m_strength->value() < 1 ? QString("refine") : QString("generate");
+        const auto selectedModel = m_model->currentData().toString();
+        const auto info = m_model->currentData(Qt::UserRole+1).toJsonObject();
+        const auto strength = m_strength->value();
+        KadanceImages images;
+        QString issue;
+        if (effectiveMode != "generate" && m_host) {
+            const auto canvas = m_host->capture(false, &issue);
+            if (canvas.image.isNull()) { m_status->setText(issue); return; }
+            images.append({ "canvas", canvas.image });
+        }
+        for (const auto& image : m_referenceImages) images.append({ "reference", image });
+        for (const auto& image : m_guidance->referenceImages(&issue)) images.append({ "reference", image });
+        if (!issue.isEmpty()) { m_status->setText(issue); return; }
+        const QJsonObject context { { "model", selectedModel },
+            { "architecture", info["architecture"].toString(info["arch"].toString(info["family"].toString())) },
+            { "mode", effectiveMode }, { "has_selection", selected }, { "scope", regional ? "region" : "global" },
+            { "strength", strength }, { "prompt_mode", m_promptSyntax->currentData().toString() },
+            { "reference_purpose", m_referencePurpose->currentData().toString() },
+            { "language", QSettings("BaronEdition", "Orchestrion").value("language", "en").toString() } };
+        auto dialog = showKadanceDialog(this, m_client, context, images,
+            [editor] { return editor ? editor->toPlainText() : QString(); },
+            [this, document, mode, editor, selectedModel, strength, selected](const QString& value) {
+                if (!editor || !m_host || m_host->documentId() != document
+                    || m_mode->currentData().toString() != mode || m_guidance->activePrompt() != editor
+                    || m_model->currentData().toString() != selectedModel || m_strength->value() != strength
+                    || m_host->hasSelection() != selected) return false;
+                if (auto prompt = qobject_cast<PromptEditor*>(editor.data())) prompt->replacePromptText(value);
+                else editor->setPlainText(value);
+                return true;
+            });
+        connect(m_mode, QOverload<int>::of(&QComboBox::currentIndexChanged), dialog, &QDialog::reject);
+        connect(m_guidance, &GuidancePanel::activeRegionChanged, dialog, &QDialog::reject);
+        connect(m_model, QOverload<int>::of(&QComboBox::currentIndexChanged), dialog, &QDialog::reject);
+        connect(m_promptSyntax, QOverload<int>::of(&QComboBox::currentIndexChanged), dialog, &QDialog::reject);
+        connect(m_referencePurpose, QOverload<int>::of(&QComboBox::currentIndexChanged), dialog, &QDialog::reject);
+    });
     m_upscale = new UpscaleWidget(generation);
     styleRow->addWidget(m_upscale->upscaler, 1);
     m_upscale->style->setModel(m_styles->model());
@@ -1995,6 +2046,7 @@ void BaronPanel::updateMode() {
     m_upscale->setVisible(upscale);
     m_upscale->upscaler->setVisible(upscale);
     m_styles->setVisible(!upscale);
+    findChild<QPushButton*>("kadanceButton")->setVisible(mode == "generate" || mode == "edit");
     findChild<QToolButton*>("styleSettings")->setVisible(!upscale);
     m_prompt->setVisible(!upscale);
     m_negative->setVisible(!upscale && QSettings("BaronEdition", "Orchestrion").value("show_negative_prompt", true).toBool());
@@ -2327,6 +2379,7 @@ void BaronPanel::canvasSelectionChanged() {
     if(m_priceTimer)m_priceTimer->start();
 }
 void BaronPanel::documentChanged() {
+    for (auto dialog : findChildren<QDialog*>("kadanceDialog")) dialog->reject();
     m_prompt->resetInputState();
     m_negative->resetInputState();
     m_previewResult.clear();
