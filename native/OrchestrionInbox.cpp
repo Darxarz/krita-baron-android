@@ -335,9 +335,11 @@ void OrchestrionInbox::download(const QJsonObject& item, bool automatic) {
                         "checksum", id);
                     return;
                 }
-                const QJsonObject info { { "id", id }, { "title", item["title"].toString() },
+                QJsonObject info { { "id", id }, { "title", item["title"].toString() },
                     { "source", item["source"].toString() }, { "returnTarget", item["returnTarget"].toObject() },
                     { "origin", origin } };
+                if (!item["meta"].toObject().isEmpty())
+                    info["meta"] = item["meta"]; // generation settings, applied once to the new document
                 emit pictureReady(item, picture, QJsonDocument(info).toJson(QJsonDocument::Compact));
             });
         });

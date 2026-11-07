@@ -168,6 +168,7 @@ private:
     QPushButton* m_returnButton;
     void updateInbox();
     void returnToWebsite();
+    void applyInboxSettings();
     QComboBox* m_connectionMode;
     QLineEdit *m_url, *m_filter, *m_seed;
     PromptEditor *m_prompt, *m_negative;

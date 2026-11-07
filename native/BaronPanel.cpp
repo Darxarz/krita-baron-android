@@ -576,12 +576,14 @@ BaronPanel::BaronPanel(CanvasHost* host, QWidget* parent, PromptEditor::Completi
     m_cfg->setValue(4);
     advancedForm->addRow(tr("CFG"), m_cfg);
     m_sampler = new QComboBox(options);
+    m_sampler->setObjectName("generationSampler");
     m_sampler->addItem(tr("Model default"), "");
     for (const auto& name : { "euler", "euler_ancestral", "dpmpp_2m", "dpmpp_2m_sde", "dpmpp_sde",
              "heun", "lcm", "res_multistep" })
         m_sampler->addItem(name, name);
     advancedForm->addRow(tr("Sampler"), m_sampler);
     m_scheduler = new QComboBox(options);
+    m_scheduler->setObjectName("generationScheduler");
     m_scheduler->addItem(tr("Model default"), "");
     for (const auto& name :
         { "normal", "karras", "exponential", "simple", "sgm_uniform", "beta", "ddim_uniform" })
@@ -2390,6 +2392,57 @@ void BaronPanel::documentChanged() {
     updateMode();
     updateJobs();
     updateInbox();
+    applyInboxSettings();
+}
+void BaronPanel::applyInboxSettings() {
+    // A picture received from the website brings its prompt, LoRAs, model and sampling, once
+    if (!m_host) return;
+    auto info = QJsonDocument::fromJson(m_host->annotation(OrchestrionInbox::annotationKey)).object();
+    const auto meta = info["meta"].toObject();
+    if (meta.isEmpty() || info["applied"].toBool()) return;
+    auto key = [](QString name) {
+        name.replace('\\', '/');
+        name.remove(QRegularExpression("\\.(safetensors|ckpt|pt)$", QRegularExpression::CaseInsensitiveOption));
+        return name.toLower();
+    };
+    QHash<QString, QString> installed;
+    for (const auto& value : m_catalog) {
+        const auto model = value.toObject();
+        if (model["kind"] == "lora") installed.insert(key(model["name"].toString()), model["name"].toString());
+    }
+    QString prompt = meta["prompt"].toString();
+    const QRegularExpression tags("<lora:([^:<>]+)(?::[^:<>]*)?>", QRegularExpression::CaseInsensitiveOption);
+    for (const auto& value : meta["loras"].toArray()) {
+        const auto lora = value.toObject();
+        const auto name = lora["name"].toString();
+        if (name.isEmpty() || (!installed.isEmpty() && !installed.contains(key(name)))) continue;
+        bool present = false;
+        for (auto it = tags.globalMatch(prompt); it.hasNext();) present |= key(it.next().captured(1)) == key(name);
+        if (present) continue;
+        QString tag = installed.value(key(name), name);
+        tag.replace('\\', '/');
+        tag.remove(QRegularExpression("\\.(safetensors|ckpt|pt)$", QRegularExpression::CaseInsensitiveOption));
+        if (tag.contains(':') || tag.contains('<') || tag.contains('>')) continue;
+        const double strength = lora["strength"].toDouble(1);
+        prompt += QString(prompt.isEmpty() || prompt.endsWith(' ') ? "" : " ") + "<lora:" + tag
+            + (qFuzzyCompare(strength, 1.0) ? QString() : ":" + QString::number(strength, 'g', 6)) + ">";
+    }
+    const auto checkpoint = meta["checkpoint"].toString(meta["model"].toString());
+    int index = m_model->findData(checkpoint);
+    for (int i = 0; index < 0 && !checkpoint.isEmpty() && i < m_model->count(); ++i)
+        if (key(m_model->itemData(i).toString()) == key(checkpoint)) index = i;
+    if (index >= 0) m_model->setCurrentIndex(index); // sets the model defaults first
+    m_prompt->setPlainText(prompt);
+    if (meta.contains("negative")) m_negative->setPlainText(meta["negative"].toString());
+    if (meta["steps"].toInt() > 0) m_steps->setValue(meta["steps"].toInt());
+    if (meta.contains("cfg")) m_cfg->setValue(meta["cfg"].toDouble());
+    for (auto [combo, field] : { std::pair { m_sampler, "sampler" }, std::pair { m_scheduler, "scheduler" } }) {
+        const int found = combo->findData(meta[field].toString());
+        if (found > 0) combo->setCurrentIndex(found);
+    }
+    info["applied"] = true;
+    m_host->setAnnotation(OrchestrionInbox::annotationKey, QJsonDocument(info).toJson(QJsonDocument::Compact));
+    if (m_saveTimer) m_saveTimer->start();
 }
 void BaronPanel::updateInbox() {
     m_inboxButton->setVisible(m_inbox->enabled());

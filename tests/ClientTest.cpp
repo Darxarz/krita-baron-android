@@ -465,6 +465,46 @@ private slots:
         widget.setCapabilities("qwen",1,false);QVERIFY(widget.findChild<QCheckBox*>("inpaintSeamless")->isEnabled());
         widget.setCapabilities("sdxl",1,false);QVERIFY(widget.findChild<QComboBox*>("inpaintFill")->isEnabled());
     }
+    void inboxPictureAppliesItsGenerationSettingsOnce() {
+        class Host : public CanvasHost {
+        public:
+            QMap<QString, QByteArray> annotations;
+            CanvasSnapshot capture(bool, QString*) override { return {}; }
+            bool apply(const QString&, const QImage&, const QImage&, const QString&, QString*) override { return true; }
+            QString documentId() const override { return "inbox-doc"; }
+            QByteArray annotation(const QString& key) const override { return annotations.value(key); }
+            void setAnnotation(const QString& key, const QByteArray& value) override { annotations[key] = value; }
+            QJsonObject state;
+            QJsonObject documentState() const override { return state; }
+            void saveDocumentState(const QJsonObject& value) override { state = value; }
+        } host;
+        const QJsonObject meta { { "prompt", "duo, best quality" }, { "negative", "blurry, low quality" },
+            { "checkpoint", "illustrious\\Baron d_00001_.safetensors" },
+            { "loras", QJsonArray { QJsonObject { { "name", "vore\\Belly.safetensors" }, { "strength", 0.8 } },
+                         QJsonObject { { "name", "style\\Ink.safetensors" } } } },
+            { "seed", 7 }, { "steps", 28 }, { "cfg", 4.6 }, { "sampler", "dpmpp_2m" }, { "scheduler", "karras" } };
+        host.annotations[OrchestrionInbox::annotationKey] = QJsonDocument(QJsonObject {
+            { "id", "item-1" }, { "origin", "https://orchestrion.ink" }, { "meta", meta } }).toJson();
+        BaronPanel panel(&host);
+        auto model = panel.findChild<QComboBox*>("checkpointSelect");
+        model->addItem("Other", "other.safetensors");
+        model->addItem("Baron d", "illustrious\\Baron d_00001_.safetensors");
+        model->setCurrentIndex(0);
+        panel.documentChanged();
+        auto prompt = panel.findChild<QPlainTextEdit*>("positivePrompt");
+        QCOMPARE(prompt->toPlainText(), QString("duo, best quality <lora:vore/Belly:0.8> <lora:style/Ink>"));
+        QCOMPARE(panel.findChild<QPlainTextEdit*>("negativePrompt")->toPlainText(), QString("blurry, low quality"));
+        QCOMPARE(model->currentData().toString(), QString("illustrious\\Baron d_00001_.safetensors"));
+        QCOMPARE(panel.findChild<QSpinBox*>("generationSteps")->value(), 28);
+        QCOMPARE(panel.findChild<QDoubleSpinBox*>("generationCfg")->value(), 4.6);
+        QCOMPARE(panel.findChild<QComboBox*>("generationSampler")->currentData().toString(), QString("dpmpp_2m"));
+        QCOMPARE(panel.findChild<QComboBox*>("generationScheduler")->currentData().toString(), QString("karras"));
+        QVERIFY(QJsonDocument::fromJson(host.annotations[OrchestrionInbox::annotationKey]).object()["applied"].toBool());
+        prompt->setPlainText("edited by the user");
+        panel.flushDocumentState(); // the docker saves the panel before every canvas change
+        panel.documentChanged();
+        QCOMPARE(prompt->toPlainText(), QString("edited by the user")); // not applied again
+    }
     void seamlessFollowsModelAndKeepsUserChoice() {
         // Website catalogs send human family names; engine discovery sends Arch ids
         QCOMPARE(PluginUi::architectureId("Flux"),QString("flux"));
@@ -1833,6 +1873,7 @@ private slots:
                 { "returnTarget", QJsonObject { { "kind", "comicPanel" }, { "projectId", 8 }, { "panelId", "p1" } } } };
         };
         QHash<QString, QJsonObject> items { { "good", makeItem("good", png) } };
+        items["good"]["meta"] = QJsonObject { { "prompt", "a cat" }, { "steps", 20 } };
         QSet<QString> takenElsewhere, corrupt;
         QList<QJsonObject> acks;
         QByteArray returnKey, returnType, returnQuery, returnBody, auth;
@@ -1894,6 +1935,7 @@ private slots:
         QCOMPARE(info["id"].toString(), QString("good"));
         QCOMPARE(info["origin"].toString(), QString("https://orchestrion.ink"));
         QCOMPARE(info["returnTarget"].toObject()["kind"].toString(), QString("comicPanel"));
+        QCOMPARE(info["meta"].toObject()["prompt"].toString(), QString("a cat"));
 
         inbox.returnPicture(annotation, picture);
         QTRY_COMPARE_WITH_TIMEOUT(returned.count(), 1, 3000);

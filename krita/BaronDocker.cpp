@@ -176,14 +176,19 @@ public:
             image->addNode(layer, image->rootLayer());
         }
         layer->setName(name);
+        // newImage() gives the background layer the opacity of the background colour, which is
+        // transparent here (so the picture keeps its alpha): make the layer fully opaque like
+        // Krita's "New image from clipboard", otherwise the canvas shows nothing.
+        layer->setOpacity(OPACITY_OPAQUE_U8);
         layer->paintDevice()->clear();
         layer->paintDevice()->convertFromQImage(
             picture.convertToFormat(QImage::Format_ARGB32), space->profile());
+        layer->setDirty();
         image->addAnnotation(new KisAnnotation(OrchestrionInbox::annotationKey, "Orchestrion inbox item", inbox));
         image->refreshGraphAsync(image->rootLayer(), image->bounds());
         image->waitForDone();
+        document->setModified(true); // unsaved picture: Krita asks before closing it
         window->addViewAndNotifyLoadingCompleted(document);
-        document->setModified(false);
         return true;
     }
     QString restoreTarget(const QRect& area, const QImage& mask) override {
