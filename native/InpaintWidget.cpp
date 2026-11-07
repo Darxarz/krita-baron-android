@@ -29,6 +29,7 @@ InpaintWidget::InpaintWidget(QWidget* parent) : QWidget(parent) {
     m_fill->setStyleSheet(flatStyle);m_context->setStyleSheet(flatStyle);
     m_context->setToolTip(tr("Part of the image around the selection which is used as context."));
     for (auto check : {m_seamless,m_focus,m_edit}) { layout->addWidget(check); connect(check,&QCheckBox::toggled,this,&InpaintWidget::changed); }
+    connect(m_seamless,&QCheckBox::toggled,this,[this](bool on){ if(m_seamless->isEnabled())m_seamlessChoice=on; });
     layout->addWidget(m_fill,1); layout->addWidget(m_context,1);
     connect(m_edit,&QCheckBox::toggled,this,&InpaintWidget::editChanged);
     for (auto combo : {m_fill,m_context}) connect(combo,QOverload<int>::of(&QComboBox::currentIndexChanged),this,&InpaintWidget::changed);
@@ -41,7 +42,8 @@ QJsonObject InpaintWidget::state() const {
 }
 void InpaintWidget::restore(const QJsonObject& state) {
     QSignalBlocker a(m_seamless),b(m_focus),c(m_edit),d(m_fill),e(m_context);
-    m_seamless->setChecked(state["use_inpaint_model"].toBool(true)); m_focus->setChecked(state["use_condition_mask"].toBool());
+    m_seamlessChoice=state["use_inpaint_model"].toBool(true);
+    m_seamless->setChecked(m_seamlessChoice&&m_seamless->isEnabled()); m_focus->setChecked(state["use_condition_mask"].toBool());
     m_edit->setChecked(state["edit"].toBool());
     m_fill->setCurrentIndex(qMax(0,m_fill->findData(state["fill"].toString("neutral"))));
     auto context=state["context"].toString("automatic");
@@ -57,10 +59,20 @@ void InpaintWidget::setLayers(const QJsonArray& layers) {
     for(auto value:layers){auto layer=value.toObject();if(layer["mask"].toBool())m_context->addItem(PluginUi::icon("context-layer",this),layer["name"].toString(),QString("layer:"+layer["id"].toString()));}
     m_context->setCurrentIndex(qMax(0,m_context->findData(context)));m_context->setProperty("savedContext",QVariant());
 }
-void InpaintWidget::setCapabilities(const QString& arch,double strength,bool editing) {
-    const auto family=arch.toLower();
-    const bool xl=QStringList{"sdxl","illu","illu_v"}.contains(family)||family.contains("illustrious")||family.contains("pony")||family.contains("noob")||family.contains("sdxl");
-    m_seamless->setEnabled(xl||QStringList{"sd15","flux","zimage","qwen","anima"}.contains(arch));
+void InpaintWidget::setCapabilities(const QString& model,double strength,bool editing) {
+    const auto family=model.toLower();
+    const auto arch=PluginUi::architectureId(model);
+    const bool xl=QStringList{"sdxl","illu","illu_v"}.contains(arch);
+    // Like the plugin: only models with an inpaint model/ControlNet use "Seamless". Elsewhere it
+    // shows unchecked (it has no effect) and the user's choice comes back on a supported model.
+    const bool seamless=xl||QStringList{"sd15","flux","zimage","qwen","anima"}.contains(arch);
+    if(seamless!=m_seamless->isEnabled()||m_seamless->isChecked()!=(seamless&&m_seamlessChoice)){
+        QSignalBlocker guard(m_seamless);
+        m_seamless->setEnabled(seamless);
+        m_seamless->setChecked(seamless&&m_seamlessChoice);
+    }
+    m_seamless->setToolTip(seamless?tr("Generate content which blends into the surroundings")
+        :tr("Not available for this model: it has no inpaint model"));
     m_focus->setVisible(arch=="sd15"||xl);m_fill->setEnabled(strength==1&&!editing);
     const bool canEdit=QStringList{"flux_k","flux2_4b","flux2_9b","flux3","qwen_e","qwen_e_p","qwen2","krea2"}.contains(family)||family.contains("qwen")||family.contains("krea")||family.contains("flux2")||family.contains("flux 3");
     m_edit->setEnabled(canEdit);QSignalBlocker guard(m_edit);m_edit->setChecked(editing);

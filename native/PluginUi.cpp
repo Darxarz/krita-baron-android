@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "PluginUi.h"
+#include <QHash>
 #include "PromptActions.h"
 #include "TagModel.h"
 #include "BaronDiagnostics.h"
@@ -279,6 +280,50 @@ QString architectureIcon(const QString& family) {
     if (name.contains("sd1") || name.contains("sd 1"))
         return "sd-version-15";
     return "sd-version-xl";
+}
+QString architectureId(const QString& value) {
+    // Engine ids (Arch names), website "arch" ids and human family names -> engine id
+    const auto name = value.trimmed().toLower();
+    static const QStringList ids { "sd15", "sdxl", "illu", "illu_v", "sd3", "flux", "flux_k", "flux2_4b",
+        "flux2_9b", "chroma", "qwen", "qwen_e", "qwen_e_p", "qwen_l", "qwen2", "anima", "zimage", "ernie",
+        "krea2", "moss", "flux3" };
+    if (ids.contains(name)) return name;
+    static const QHash<QString, QString> aliases {
+        { "illustrious", "illu" }, { "illustrious xl", "illu" }, { "illustrious v-prediction", "illu_v" },
+        { "pony", "sdxl" }, { "noobai", "sdxl" }, { "sd xl", "sdxl" }, { "sd 1.5", "sd15" }, { "sd1.5", "sd15" },
+        { "sd 3", "sd3" }, { "flux.1", "flux" }, { "flux 1", "flux" }, { "flux kontext", "flux_k" },
+        { "flux2", "flux2_9b" }, { "flux 2 klein 9b", "flux2_9b" }, { "flux 2 klein 4b", "flux2_4b" },
+        { "qwen-image", "qwen" }, { "qwen image", "qwen" }, { "qwen edit", "qwen_e" }, { "qwen edit plus", "qwen_e_p" },
+        { "qwen layered", "qwen_l" }, { "qwen-image-2.1", "qwen2" }, { "qwen-image21", "qwen2" }, { "qwen21", "qwen2" },
+        { "qwen image 2.1", "qwen2" }, { "z-image", "zimage" }, { "z image", "zimage" }, { "ernie image", "ernie" },
+        { "ernie-image", "ernie" }, { "krea 2", "krea2" }, { "moss-image", "moss" }, { "moss image", "moss" },
+        { "moss_image", "moss" }, { "flux 3 klein", "flux3" }, { "flux3-klein", "flux3" }, { "flux3_klein", "flux3" } };
+    if (aliases.contains(name)) return aliases.value(name);
+    if (name.contains("illustrious")) return name.contains("v-pred") ? "illu_v" : "illu";
+    if (name.contains("sdxl") || name.contains("pony") || name.contains("noob")) return "sdxl";
+    if (name.startsWith("sd 1") || name.startsWith("sd1")) return "sd15";
+    if (name.contains("z-image") || name.contains("zimage")) return "zimage";
+    if (name.contains("moss")) return "moss";
+    if (name.contains("krea")) return "krea2";
+    if (name.contains("flux 3") || name.contains("flux3")) return "flux3";
+    if (name.contains("klein") && name.contains("4b")) return "flux2_4b";
+    if (name.contains("flux 2") || name.contains("flux2") || name.contains("klein")) return "flux2_9b";
+    if (name.contains("kontext")) return "flux_k";
+    if (name.startsWith("flux")) return "flux";
+    if (name.contains("qwen") && (name.contains("2.1") || name.contains("21"))) return "qwen2";
+    if (name.contains("qwen") && name.contains("edit")) return "qwen_e";
+    if (name.startsWith("qwen")) return "qwen";
+    return name;
+}
+QString architectureId(const QJsonObject& model) {
+    // "architecture" (engine discovery) is exact; a website family is more precise than its
+    // "arch" (Illustrious is "sdxl" there), which is only used for unknown families.
+    if (model.contains("architecture")) return architectureId(model["architecture"].toString());
+    static const QStringList known { "sd15", "sdxl", "illu", "illu_v", "sd3", "flux", "flux_k", "flux2_4b",
+        "flux2_9b", "chroma", "qwen", "qwen_e", "qwen_e_p", "qwen_l", "qwen2", "anima", "zimage", "ernie",
+        "krea2", "moss", "flux3" };
+    const auto family = architectureId(model["family"].toString());
+    return known.contains(family) || !model.contains("arch") ? family : architectureId(model["arch"].toString());
 }
 }
 

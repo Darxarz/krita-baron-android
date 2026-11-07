@@ -367,6 +367,7 @@
     "The prompt changed while Kadance was working. Ask again before inserting.": "The prompt changed while Kadance was working. Ask again before inserting.",
     "The proposed prompt will appear here. You can edit it before inserting.": "The proposed prompt will appear here. You can edit it before inserting.",
     "Undo insertion": "Undo insertion",
-    "Use this prompt": "Use this prompt"
+    "Use this prompt": "Use this prompt",
+    "Not available for this model: it has no inpaint model": "ใช้ไม่ได้กับโมเดลนี้: ไม่มีโมเดลอินเพนต์"
   }
 }
