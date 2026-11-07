@@ -291,5 +291,11 @@
   "Queued images exceed the memory limit. Queue fewer large images or remove stopped jobs.": "Изображения в очереди превышают лимит памяти. Поставь меньше больших изображений или убери остановленные задачи.",
   "Cancelled locally; server cancellation could not be confirmed: %1": "Отменено в Крите; отмена на сервере не подтверждена: %1",
   "Server cancellation was not confirmed. The task may still be queued.": "Сервер не подтвердил отмену. Задание может оставаться в очереди.",
-  "The job is no longer in the server queue or history. No new generation was started.": "Задания больше нет в очереди или истории сервера. Повторная генерация не запускалась."
+  "The job is no longer in the server queue or history. No new generation was started.": "Задания больше нет в очереди или истории сервера. Повторная генерация не запускалась.",
+  "Could not prepare the result image: %1": "Не удалось подготовить картинку результата: %1",
+  "From Regions": "Из регионов",
+  "General Edit V2": "General Edit V2",
+  "Generate segmentation control layer from current regions": "Создать слой сегментации из текущих регионов",
+  "Identity Edit V2": "Identity Edit V2",
+  "Text prompt regions have not been set up.": "Текстовые регионы промпта не настроены."
 }

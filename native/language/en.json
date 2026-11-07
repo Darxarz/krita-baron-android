@@ -493,6 +493,9 @@
     "The proposed prompt will appear here. You can edit it before inserting.": "The proposed prompt will appear here. You can edit it before inserting.",
     "Undo insertion": "Undo insertion",
     "Use this prompt": "Use this prompt",
-    "Not available for this model: it has no inpaint model": "Not available for this model: it has no inpaint model"
+    "Not available for this model: it has no inpaint model": "Not available for this model: it has no inpaint model",
+    "Could not prepare the result image: %1": "Could not prepare the result image: %1",
+    "General Edit V2": "General Edit V2",
+    "Identity Edit V2": "Identity Edit V2"
   }
 }

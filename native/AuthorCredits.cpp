@@ -14,7 +14,7 @@ AuthorCredits::AuthorCredits(QWidget* parent) : QWidget(parent) {
     title->setFont(font);
     layout->addWidget(title);
     for (const auto& text : { tr("Original author: Acly and contributors"),
-             tr("Native Android port and modifications: Darxarz вЂ” Baron Edition"),
+             tr("Native Android port and modifications: Darxarz — Baron Edition"),
              tr("Krita: the Krita development team and contributors"),
              tr("This is an independent modified port. Acly and the Krita team do not maintain this edition.") }) {
         auto label = new QLabel(text, this);
