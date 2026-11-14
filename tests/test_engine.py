@@ -967,6 +967,22 @@ class EngineTests(unittest.TestCase):
         # Same text as ComfyUI's Flux3LayoutPrompt (json.dumps with ensure_ascii=False)
         self.assertEqual(texts, [f"{prompt} {json.dumps(rows, ensure_ascii=False)}"])
 
+    def test_qwen21_turbo_uses_fixed_schedule(self):
+        import copy
+
+        info = copy.deepcopy(self.info)
+        turbo = "Qwen21\\qwen_image_2.1_turbo_int8_convrot.safetensors"
+        info["UNETLoader"]["input"]["required"]["unet_name"][0].append(turbo)
+        info.setdefault("ManualSigmas", {"input": {"required": {"sigmas": ["STRING", {}]}},
+                                         "output": ["SIGMAS"], "name": "ManualSigmas"})
+        metadata = {**self.metadata, turbo: {"base_model": "qwen-image-2.1"}}
+        request = {"mode": "generate", "model": turbo, "width": 512, "height": 512, "prompt": "a ship",
+                   "steps": 25, "sampler": "dpmpp_2m"}
+        graph = compile_request({"request": request, "object_info": info, "diffusion_models": metadata})["prompt"]
+        nodes = {node["class_type"]: node["inputs"] for node in graph.values()}
+        self.assertIn("ManualSigmas", nodes)
+        self.assertNotIn("BasicScheduler", nodes)
+        self.assertEqual(nodes["KSamplerSelect"]["sampler_name"], "euler")
 
 if __name__ == "__main__":
     unittest.main()

@@ -403,6 +403,14 @@ class ComfyWorkflow:
                 model_type=model_type,
                 denoise=1.0,
             )
+        elif scheduler == "qwen21_turbo":
+            # Distillation schedule fixed by the official Qwen Image 2.1 Turbo template.
+            # The sigma list defines the 8 steps; the steps argument is ignored.
+            return self.add(
+                "ManualSigmas",
+                output_count=1,
+                sigmas="1.0, 0.978453, 0.95418, 0.926626, 0.89508, 0.845148, 0.704534, 0.414568, 0",
+            )
         elif scheduler == "gits":
             return self.add(
                 "GITSScheduler",
